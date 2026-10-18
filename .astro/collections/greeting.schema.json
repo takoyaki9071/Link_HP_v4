@@ -1,0 +1,27 @@
+{
+  "$ref": "#/definitions/greeting",
+  "definitions": {
+    "greeting": {
+      "type": "object",
+      "properties": {
+        "author": {
+          "type": "string",
+          "default": "代表"
+        },
+        "pdf": {
+          "type": "string",
+          "default": ""
+        },
+        "published": {
+          "type": "boolean",
+          "default": false
+        },
+        "$schema": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}
