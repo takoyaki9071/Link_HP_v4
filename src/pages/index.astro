@@ -1,0 +1,178 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SectionHeading from '../components/SectionHeading.astro';
+import NewsList from '../components/NewsList.astro';
+import siteData from '../data/site.json';
+import aboutData from '../data/about.json';
+import HeroCanvas from '../components/HeroCanvas.astro';
+
+// answers/01・02 の承認内容を反映（2026-10-18）。
+// contact のURL（確認事項#4）のみ未確定のため「準備中」仮表示を維持。
+const c = siteData.confirmed;
+const contact = siteData.contact;
+const about = aboutData;
+---
+
+<BaseLayout>
+  <!-- 開幕演出（IntroCanvas）は 2026-10-18 関係者指示「ページを開いた時のアニメーションなしで」により
+       非掲載に。コンポーネントは残置 — 戻すときは <IntroCanvas /> をこの位置に戻すだけ -->
+  <!-- 01 ヒーロー: キャッチコピーは answers/01 の標語（2026-10-18 承認反映） -->
+  <section class="hero" id="hero" aria-labelledby="hero-copy">
+    <div class="container hero-inner">
+      <!-- TODO: 団体説明の運用更新時は about.json hero を差し替え（answers/01 より反映済み） -->
+      <p class="hero-eyebrow reveal">Link 公式ホームページ</p>
+      <h1 class="hero-copy reveal" id="hero-copy" style="--reveal-delay: 80ms;">
+        すべての人の、<span class="hero-accent">{about.hero.accent}</span>をLinkする。
+      </h1>
+      <span class="hero-bar reveal" style="--reveal-delay: 160ms;" aria-hidden="true"></span>
+      <p class="hero-lead reveal" style="--reveal-delay: 200ms;">
+        {about.hero.lead}
+      </p>
+      <div class="hero-actions reveal" style="--reveal-delay: 240ms;">
+        <a class="btn btn-primary" href="/activity">
+          活動を見る<span class="btn-arrow" aria-hidden="true">→</span>
+        </a>
+        <a class="btn btn-ghost" href="#news">
+          お知らせを見る<span class="btn-arrow" aria-hidden="true">→</span>
+        </a>
+      </div>
+
+      <!-- 表紙風の目次（実リンク）。下に続くセクションへの道標でもある。
+           活動は 2026-10-18 関係者指示で完全別ページ（/activity）に -->
+      <nav class="hero-toc reveal" style="--reveal-delay: 320ms;" aria-label="このページの目次">
+        <ul>
+          <li><a href="#news"><span class="toc-num">01</span><span class="toc-label">お知らせ</span></a></li>
+          <li><a href="#about"><span class="toc-num">02</span><span class="toc-label">Linkについて</span></a></li>
+          <li><a href="/activity"><span class="toc-num">03</span><span class="toc-label">活動</span></a></li>
+          <li><a href="#contact"><span class="toc-num">04</span><span class="toc-label">お問い合わせ</span></a></li>
+        </ul>
+      </nav>
+    </div>
+    <!-- 背景のゆるやかな演出（装飾のみ。prefers-reduced-motion で停止） -->
+    <div class="hero-bg" aria-hidden="true">
+      <span class="hero-blob hero-blob-a"></span>
+      <span class="hero-blob hero-blob-b"></span>
+      <span class="hero-pattern hero-pattern-dots"></span>
+      <span class="hero-pattern hero-pattern-stripes"></span>
+    </div>
+    <!-- 実験版キャンバス演出（点→線→多面体が転がる。外せば元に戻る） -->
+    <HeroCanvas />
+    <!-- =========================================================================
+         デザインブック演出 v4.1（試作・関係者指示）
+         面付けトンボ + 背表紙の縦書きゴースト字（版元情報の一行は 2026-10-18 に撤去）。
+         背表紙の文字列は**毎回ランダムに生成**した数字/記号に差し替える（下の script）。
+         すべて装飾（aria-hidden・情報は運ばない）。
+         戻し方: この枠線内の要素（hero-press / hero-corners / hero-spine）
+         を削除し、pages.css の「デザインブック演出」ブロックを消す。
+         ========================================================================= -->
+    <div class="hero-press" aria-hidden="true"></div>
+    <div class="hero-corners" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    <span class="hero-spine" aria-hidden="true" lang="ja">1 2 3 4 5 6 7 8 9</span>
+    <script is:inline>
+      /* 背表紙を「超ランダム」に: 数字・記号・まれに空白を毎回違う長さで並べる（装飾） */
+      (function () {
+        var spine = document.querySelector('.hero-spine');
+        if (!spine) return;
+        var chars = '0123456789+*=/<>#:.×∴|';
+        var out = '';
+        var len = 14 + Math.floor(Math.random() * 10);
+        for (var i = 0; i < len; i++) {
+          out += Math.random() < 0.12 ? ' ' : chars[Math.floor(Math.random() * chars.length)];
+        }
+        spine.textContent = out.trim();
+      })();
+    </script>
+    <!-- ============================ ここまで ============================ -->
+    <!-- 装飾のみ。情報は運ばない -->
+    <div class="hero-scroll" aria-hidden="true">Scroll</div>
+  </section>
+
+  <!-- 02 お知らせ: markdown 追加で反映。0件のときは空表示（docs/要件定義書.md §7.3） -->
+  <section class="section section-alt" id="news" aria-labelledby="news-title">
+    <div class="container">
+      <SectionHeading title="お知らせ" id="news-title" eyebrow="News" index="01" />
+      <div class="reveal" style="--reveal-delay: 120ms;">
+        <NewsList />
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 Linkについて: 標準文＋要点3カード（answers/01 より反映） -->
+  <section class="section" id="about" aria-labelledby="about-title">
+    <div class="container">
+      <SectionHeading title="Linkについて" id="about-title" eyebrow="About" index="02" />
+      <div class="reveal" style="--reveal-delay: 120ms;">
+        <p class="about-lead">{about.standard}</p>
+        <ul class="point-grid" role="list">
+          {about.points.map((point) => (
+            <li class="card point-card">
+              <p class="card-eyebrow">{point.label}</p>
+              <p class="point-text">{point.text}</p>
+            </li>
+          ))}
+        </ul>
+        <div class="section-cta">
+          <a class="btn btn-ghost" href="/about">
+            団体紹介を見る<span class="btn-arrow" aria-hidden="true">→</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 お問い合わせ: メールはアドレスのベタ書き（mailto起動なし）＋フォームのページ内埋め込み。
+     活動は別ページ（/activity）に移設したためセクション番号は 03。 activities の代わりに灰面を担当 -->
+  <section class="section section-alt" id="contact" aria-labelledby="contact-title">
+    <div class="container">
+      <SectionHeading title="お問い合わせ" id="contact-title" eyebrow="Contact" index="03" />
+      <div class="reveal" style="--reveal-delay: 120ms;">
+        <p class="contact-note">
+          活動への参加、お問い合わせは下のフォームからお願いします。
+          メールでのご連絡も受け付けています。
+        </p>
+        <!-- TODO(確認事項#4): メールは仮アドレス（test.com）。正式アドレスが確定したら site.json を差し替え -->
+        <ul class="contact-list" role="list">
+          {Object.values(contact).filter((channel) => channel.mode === 'address').map((channel) => (
+            <li class="contact-item">
+              <span class="contact-label">{channel.label}</span>
+              {channel.mode === 'address' ? (
+                <span class="contact-address">{channel.confirmed && channel.address ? channel.address : '準備中'}</span>
+              ) : channel.confirmed && channel.url ? (
+                <a href={channel.url} target="_blank" rel="noopener noreferrer">
+                  {channel.action}<span class="btn-arrow" aria-hidden="true">→</span>
+                </a>
+              ) : (
+                <span class="contact-pending">URLは公開確定後に表示されます。</span>
+              )}
+            </li>
+          ))}
+        </ul>
+
+        <!-- ページ内で直接入力できるフォーム（Googleフォームの埋め込み）。
+             埋め込みが読み込めない環境向けに、開いたリンクも併記 -->
+        {contact.form.embed && (
+          <div class="contact-embed">
+            <h3 class="contact-embed-title">フォームからのお問い合わせ<span class="contact-embed-note">（このページから直接入力できます）</span></h3>
+            <iframe
+              class="contact-form-iframe"
+              src={contact.form.embed}
+              title="お問い合わせフォーム（Googleフォーム）"
+              loading="lazy"
+              width="640"
+              height="760"
+              referrerpolicy="no-referrer-when-downgrade"
+            >
+              <p>フォームを表示できませんでした。
+                <a href={contact.form.url} target="_blank" rel="noopener noreferrer">フォームを開く</a>
+              </p>
+            </iframe>
+            <p class="contact-embed-note-bottom">
+              表示されない場合は<a href={contact.form.url} target="_blank" rel="noopener noreferrer">フォームを開く</a>からご利用いただけます。
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  </section>
+
+</BaseLayout>

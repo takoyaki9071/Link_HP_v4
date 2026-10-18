@@ -1,0 +1,54 @@
+---
+/**
+ * 活動カード（answers/02 の構成 + questions/03 のAI起案一文）。
+ * status: 公開中 | 準備中 | 検討中（チップの色は CSS の data-status で切替）
+ * audience / message はAI起案の仮文案（承認後に差し替え）
+ *
+ * TODO(2026-10-18 関係者指示): 各カードは今後つくる詳細ページへ飛ばす。
+ *  - Lab. 実証実験 → 「活動」のページ（/activity 想定）
+ *  - ガクチカラボ   → 「サービス」のページ（/service 想定・ガクチカラボはサービス扱い）
+ *  ページ完成まで href は持たせない（今は詳細への導線カードとして落ち影つきで表示）。
+ */
+interface Props {
+  title: string;
+  summary: string;
+  description: string;
+  /** こんな人に使ってほしいか（AI起案の仮文案） */
+  audience?: string;
+  /** この活動に込めた想い（AI起案の仮文案） */
+  message?: string;
+  status: string;
+  /** 実施状況の補足（例: 令和8年11月予定）。なければ表示しない */
+  phase?: string;
+  /** 対象者。answers/02 で「要確認」の間は「確認中」を渡す（正式な対象者は確定待ち） */
+  target?: string;
+}
+
+const { title, summary, description, audience, message, status, phase, target } = Astro.props;
+---
+
+<li class="card activity-card" data-status={status}>
+  <div class="activity-meta">
+    <span class="activity-status">{status}{phase ? `（${phase}）` : ''}</span>
+    {target && <span class="activity-target">対象者: {target}</span>}
+  </div>
+  <h3 class="card-title">{title}</h3>
+  <p class="activity-summary">{summary}</p>
+  <p class="card-text">{description}</p>
+  {(audience || message) && (
+    <dl class="activity-detail">
+      {audience && (
+        <div class="activity-detail-row">
+          <dt class="activity-detail-term">こんな人に</dt>
+          <dd class="activity-detail-text">{audience}</dd>
+        </div>
+      )}
+      {message && (
+        <div class="activity-detail-row">
+          <dt class="activity-detail-term">想い</dt>
+          <dd class="activity-detail-text">{message}</dd>
+        </div>
+      )}
+    </dl>
+  )}
+</li>

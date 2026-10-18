@@ -1,0 +1,81 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import SectionHeading from '../components/SectionHeading.astro';
+import ActivityCard from '../components/ActivityCard.astro';
+import activitiesData from '../data/activities.json';
+
+/**
+ * 活動の専用ページ（2026-10-18 関係者指示「活動をトップページから完全別ページに飛ばしたい」）。
+ * ホームの活動セクション（旧 04）をここへ移設。X（@link_lab2026）の「活動の近況」も一緒に移動。
+ * 各活動の詳細ページ（活動/サービス）は今後作成予定（ActivityCard.astro の TODO 参照・現状リンクなし）。
+ */
+const activities = activitiesData.activities;
+---
+
+<BaseLayout title="活動 - Link 公式ホームページ" description="Linkの活動（Lab. 実証実験・ガクチカラボ）をご紹介するページです。">
+  <PageHero
+    eyebrow="Activities"
+    title="活動"
+    lead="Linkの活動をご紹介するページです。各活動の詳細ページは準備中です。"
+  />
+
+  <!-- 活動一覧: answers/02 より反映。各活動の対象者は要確認のため「確認中」表示 -->
+  <section class="section" id="activities" aria-labelledby="activities-title">
+    <div class="container">
+      <SectionHeading title="活動一覧" id="activities-title" eyebrow="Index" index="01" />
+      <div class="reveal" style="--reveal-delay: 120ms;">
+        <p class="section-lead">
+          対象: 小学校5年生〜20歳（中高生中心）／拠点: 大阪府寝屋川市（寝屋川市立市民活動センター内）
+        </p>
+        <ul class="card-grid activity-grid" role="list">
+          <!-- TODO: 各活動の対象者は answers/02 の「要確認」（要件定義書 §10 行3 残タスク）。確定後 activities.json の target を差し替え -->
+          {activities.map((activity) => (
+            <ActivityCard
+              title={activity.title}
+              summary={activity.summary}
+              description={activity.description}
+              audience={activity.audience}
+              message={activity.message}
+              status={activity.status}
+              phase={activity.phase}
+              target={activity.target}
+            />
+          ))}
+        </ul>
+        <!-- TODO(questions/03): 「こんな人に」「想い」はAI起案の仮文案。承認後に activities.json を差し替え -->
+        <p class="provisional-note activity-note">
+          ※ カード内の「こんな人に」「想い」の一文はAI起案の仮文案です。関係者の確認後に確定します。
+        </p>
+
+        <!-- X（@link_lab2026）の最新投稿。活動の近況として掲載（ホームから移設・2026-10-18 関係者指示） -->
+        <div class="x-embed">
+          <h3 class="x-embed-title">X（<span lang="en">@link_lab2026</span>）の最新投稿<span class="x-embed-note">（活動の近況をお知らせしています）</span></h3>
+          <div class="x-timeline">
+            <!-- data-theme は下のスクリプトで現在の表示モードに合わせて設定（widgets.js 読み込み前） -->
+            <a class="twitter-timeline" data-lang="ja" data-theme="light" data-height="440" href="https://x.com/link_lab2026?ref_src=twsrc%5Etfw">
+              X（@link_lab2026）の投稿を表示
+            </a>
+          </div>
+          <p class="x-embed-note-bottom">
+            タイムラインが表示されない場合は、<a href="https://x.com/link_lab2026" target="_blank" rel="noopener noreferrer">Xを開く</a>からご確認いただけます。
+          </p>
+          <!-- TODO(第2期): 表示後のモード切替には追従しない（初回表示のみ対応） -->
+          <script is:inline>
+            (function () {
+              try {
+                if (document.documentElement.dataset.theme === 'dark') {
+                  const el = document.querySelector('.twitter-timeline');
+                  if (el) el.dataset.theme = 'dark';
+                }
+              } catch (e) {
+                /* 取得できない環境では既定（light）のまま */
+              }
+            })();
+          </script>
+          <script is:inline async charset="utf-8" src="https://platform.twitter.com/widgets.js"></script>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

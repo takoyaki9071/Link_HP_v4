@@ -1,0 +1,93 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import SectionHeading from '../components/SectionHeading.astro';
+import { getCollection, render } from 'astro:content';
+import {
+  dateOf,
+  formatDate,
+  isoDate,
+  sortByDateDesc,
+  articleId,
+  hasBody,
+  type NewsEntry,
+} from '../lib/news';
+
+// お知らせ専用ページ。ホームの行はここへ飛ばす（関係者指示 2026-10-18）。
+// 全件を新しい順に掲載。home にはタイトル+日付のみ出し、本文・写真はこのページで読む。
+const entries: NewsEntry[] = sortByDateDesc(await getCollection('news'));
+
+const articles = await Promise.all(
+  entries.map(async (item) => ({
+    item,
+    date: dateOf(item),
+    Body: hasBody(item) ? (await render(item)).Content : null,
+  })),
+);
+---
+
+<BaseLayout
+  title="お知らせ - Link 公式ホームページ"
+  description="Linkの活動報告や参加案内などのお知らせを掲載するページです。"
+>
+  <PageHero
+    eyebrow="News"
+    title="お知らせ"
+    lead="Linkの活動報告や参加案内などをお知らせします。新しいものから順に掲載します。"
+  />
+
+  <section class="section">
+    <div class="container">
+      <SectionHeading title="お知らせ一覧" id="news-all-title" eyebrow="Index" index="01" />
+
+      {articles.length === 0 ? (
+        <p class="news-empty">
+          現在、公開中のお知らせはありません。
+          <span class="visually-hidden">
+            （追加は src/content/news へ markdown を追加して反映します。docs/更新手順.md 参照）
+          </span>
+        </p>
+      ) : (
+        <div class="news-stack">
+          {articles.map(({ item, date, Body }) => (
+            <article class="news-article" id={articleId(item)}>
+              <header class="news-article-head">
+                <time class="news-date" datetime={isoDate(date)}>
+                  {date ? formatDate(date) : '日付未設定'}
+                </time>
+                <span
+                  class:list={['badge', { 'badge-important': item.data.category === '重要' }]}
+                >
+                  {item.data.category}
+                </span>
+              </header>
+              <h3 class="news-article-title">{item.data.title}</h3>
+              <span class="section-bar" aria-hidden="true"></span>
+              {
+                item.data.image && (
+                  <img
+                    class="news-figure"
+                    src={item.data.image}
+                    alt={item.data.title}
+                    loading="lazy"
+                  />
+                )
+              }
+              {Body && (
+                <div class="news-body">
+                  <Body />
+                </div>
+              )}
+            </article>
+          ))}
+        </div>
+      )}
+
+      <p class="news-back">
+        <a class="btn btn-ghost" href="/">
+          ホームへ戻る<span class="btn-arrow" aria-hidden="true">→</span>
+        </a>
+      </p>
+    </div>
+  </section>
+</BaseLayout>

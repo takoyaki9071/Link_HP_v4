@@ -1,0 +1,943 @@
+/* ボタン・ヘッダー・お知らせ・バッジ等の共通コンポーネント */
+
+/* ---------- ボタン ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 20px;
+  border-radius: var(--radius-btn);
+  font-weight: 600;
+  font-size: 1rem;
+  text-decoration: none;
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
+}
+
+/* 矢印の微細な送り出し（.btn-arrow は装飾・aria-hidden） */
+.btn-arrow {
+  transition: transform var(--duration-fast) var(--ease-standard);
+}
+
+.btn:hover .btn-arrow,
+.btn:focus-visible .btn-arrow {
+  transform: translateX(4px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn:hover .btn-arrow,
+  .btn:focus-visible .btn-arrow {
+    transform: none;
+  }
+}
+
+.btn-primary {
+  background: var(--color-btn-primary-bg);
+  color: var(--color-on-inverse);
+}
+
+.btn-primary:hover,
+.btn-primary:focus-visible {
+  background: var(--color-btn-primary-bg-hover);
+  color: var(--color-on-inverse);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lift);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-primary:hover,
+  .btn-primary:focus-visible {
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+.btn-ghost {
+  border: 2px solid var(--color-brand-strong);
+  color: var(--color-brand-strong);
+  background: transparent;
+}
+
+.btn-ghost:hover {
+  background: color-mix(in srgb, var(--color-brand) 8%, var(--color-background));
+  color: var(--color-brand-deep);
+}
+
+/* ---------- ヘッダー（sticky: 下層にスクロールしてもナビへすぐ戻れる） ---------- */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-header-bg);
+  -webkit-backdrop-filter: blur(14px) saturate(1.1);
+  backdrop-filter: blur(14px) saturate(1.1);
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  min-height: 64px;
+}
+
+/* ブランドは左端に置き、残り（ナビ・テーマ切替・メニュー）を右端に寄せる */
+.brand {
+  display: inline-flex;
+  align-items: center;
+  margin-inline-end: auto;
+  padding-block: 8px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.brand-logo {
+  height: 30px;
+  width: auto;
+}
+
+/* ロゴの黒/白切替（ダークモード対応）:
+   黒ロゴ=ライト面用 / 白ロゴ=ダーク面用。html[data-theme] は描写前に確定するため
+   切替のちらつきが出ない。ダークトークン（tokens.css）と同じく
+   (A) data-theme（トグル・初期化スクリプト経由）と (B) OS 設定フォールバックの2経路 */
+.brand-logo[data-variant="dark"] {
+  display: none;
+}
+
+/* (A) data-theme="dark"（手動選択 or OS=dark の初期化スクリプト） */
+html[data-theme="dark"] .brand-logo[data-variant="light"] {
+  display: none;
+}
+
+html[data-theme="dark"] .brand-logo[data-variant="dark"] {
+  display: block;
+}
+
+/* (B) JS 無効などで data-theme が付かないときは OS 設定に追従 */
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme]) .brand-logo[data-variant="light"] {
+    display: none;
+  }
+
+  html:not([data-theme]) .brand-logo[data-variant="dark"] {
+    display: block;
+  }
+}
+
+.site-nav ul {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* デスクトップ: ナビ1行に収め、CTAと同じ列にする */
+@media (min-width: 768px) {
+  .site-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+.site-nav ul a {
+  display: inline-block;
+  position: relative;
+  padding: 8px 12px;
+  color: var(--color-text);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+.site-nav ul a:hover {
+  color: var(--color-brand-strong);
+  text-decoration: none;
+}
+
+/* hover/focus の「ボワーン」とした赤い光の落影（ぼかした帯がふくらんで現れる）。
+   落影自体は装飾(::after)。リデュースモードではふくむ演出を止め、単に表示される */
+.site-nav ul a::after {
+  content: "";
+  position: absolute;
+  inset-inline: 12px;
+  /* 位置はトークンで管理（ライト=文字の真下・ダーク=従来どおり低め。2026-10-18 位置ずれ修正） */
+  bottom: var(--nav-glow-bottom);
+  height: 2px;
+  border-radius: 2px;
+  background: var(--color-brand-strong);
+  filter: blur(5px);
+  box-shadow: var(--nav-glow-shadow);
+  opacity: 0;
+  transform: scaleX(0.3);
+  transform-origin: center;
+  transition: opacity 0.25s var(--ease-standard), transform 0.25s var(--ease-standard);
+}
+
+.site-nav ul a:hover::after,
+.site-nav ul a:focus-visible::after {
+  opacity: 0.6;
+  transform: scaleX(1);
+  transition-duration: 0.25s;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .site-nav ul a:hover::after,
+  .site-nav ul a:focus-visible::after {
+    animation: nav-glow-bloom 0.65s var(--ease-standard);
+  }
+}
+
+@keyframes nav-glow-bloom {
+  0% {
+    opacity: 0;
+    transform: scaleX(0.3);
+    filter: blur(2px);
+  }
+
+  55% {
+    opacity: 0.85;
+    transform: scaleX(1.08);
+    filter: blur(7px);
+  }
+
+  100% {
+    opacity: 0.6;
+    transform: scaleX(1);
+    filter: blur(5px);
+  }
+}
+
+.nav-cta {
+  margin-left: 8px;
+  min-height: 40px;
+  padding: 8px 18px;
+}
+
+.menu-btn {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.menu-btn-bar {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: var(--color-text);
+  transition:
+    transform var(--duration-fast) var(--ease-standard),
+    opacity var(--duration-fast) var(--ease-standard);
+}
+
+.menu-btn.is-open .menu-btn-bar:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.menu-btn.is-open .menu-btn-bar:nth-child(2) {
+  opacity: 0;
+}
+
+.menu-btn.is-open .menu-btn-bar:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* ---------- 表示モード切替（ライト⇄ダーク） ---------- */
+/* ヘッダーの丸アイコンボタン。月=ダークへ / 太陽=ライトへ。44px の操作域を確保 */
+.theme-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
+}
+
+.theme-btn:hover,
+.theme-btn:focus-visible {
+  border-color: var(--color-brand-strong);
+  color: var(--color-brand-strong);
+}
+
+.theme-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ライト時は「月」（ダークへ）、ダーク時は「太陽」（ライトへ）を表示 */
+.theme-btn .theme-icon-sun {
+  display: none;
+}
+
+.theme-btn.is-dark .theme-icon-moon {
+  display: none;
+}
+
+.theme-btn.is-dark .theme-icon-sun {
+  display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-btn {
+    transition: none;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .menu-btn {
+    display: inline-flex;
+  }
+
+  .site-nav {
+    display: none;
+    width: 100%;
+  }
+
+  .site-nav.open {
+    display: block;
+    padding-block: 8px 16px;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .site-nav.open {
+      animation: nav-in 180ms var(--ease-standard);
+    }
+  }
+
+  @keyframes nav-in {
+    from {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .site-nav ul {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+  }
+
+  .site-nav ul a {
+    display: block;
+    padding: 12px 8px;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .nav-cta {
+    display: block;
+    margin-block-start: 16px;
+    text-align: center;
+  }
+}
+
+/* ---------- セクション見出し: 英字eyebrow＋赤番号で章立てのリズムを作る ---------- */
+.section-head {
+  position: relative;
+  margin-block-end: clamp(24px, 4vw, 40px);
+}
+
+/* デザインブック演出 v4 の一部: 大きなゴースト番号（面付けの頁番号風・超薄い枠線） */
+.section-ghost {
+  position: absolute;
+  top: -0.16em;
+  right: 0;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--deco-ring);
+  font-size: clamp(72px, 9vw, 132px);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+  user-select: none;
+}
+
+@media (max-width: 767.98px) {
+  .section-ghost {
+    top: -0.5em;
+    font-size: clamp(48px, 14vw, 72px);
+  }
+}
+
+.section-cta {
+  margin-block-start: var(--space-6);
+}
+
+.section-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--color-muted);
+  font-size: var(--fs-caption);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  margin-block-end: var(--space-2);
+}
+
+.section-index {
+  color: var(--color-brand);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 番号のあとの区切り斜線（装飾） */
+.section-index::after {
+  content: "/";
+  margin-inline-start: 10px;
+  color: var(--color-border);
+  font-weight: 400;
+}
+
+.section-title {
+  font-size: var(--fs-h2);
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+}
+
+.section-bar {
+  display: block;
+  width: 48px;
+  height: 4px;
+  margin-block-start: var(--space-3);
+  background: var(--color-brand);
+  border-radius: 2px;
+}
+
+/* ---------- 未確定コンテンツの仮表示 ---------- */
+.pending {
+  color: var(--color-muted);
+  font-size: 0.9375rem;
+  padding: 14px 16px;
+  background: var(--color-surface-muted);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-card);
+}
+
+/* ---------- お知らせ（ホーム: タイトル+日付のリンク行・/news へ飛ばす） ---------- */
+.news-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--color-border);
+}
+
+.news-row {
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* 行ごとリンク。日付+タイトルのみ（写真・本文は /news 専用ページで読む） */
+.news-link {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 12px;
+  min-height: 44px;
+  padding: 14px 4px;
+  color: var(--color-text);
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+.news-link:hover .news-title,
+.news-link:focus-visible .news-title {
+  color: var(--color-brand-strong);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
+/* 「専用ページで読む」の合図（装飾。右端に寄せる） */
+.news-more {
+  margin-inline-start: auto;
+  align-self: center;
+  color: var(--color-brand-strong);
+  font-weight: 700;
+  line-height: 1;
+  padding-inline-start: 8px;
+}
+
+.news-date {
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.6;
+  padding: 1px 10px;
+  border: 1px solid var(--color-brand-strong);
+  border-radius: 999px;
+  color: var(--color-brand-strong);
+  white-space: nowrap;
+}
+
+.badge-important {
+  background: var(--color-btn-primary-bg);
+  color: var(--color-on-inverse);
+}
+
+.news-title {
+  font-weight: 600;
+}
+
+/* 本文: markdown の段落・リスト・写真・リンクをそのまま出す（/news 専用ページで使用） */
+.news-body {
+  max-width: 64em;
+  font-size: var(--fs-small);
+  line-height: 1.95;
+}
+
+.news-body > :first-child {
+  margin-block-start: 0;
+}
+
+.news-body > :last-child {
+  margin-block-end: 0;
+}
+
+.news-body p {
+  margin-block: 0.9em;
+}
+
+/* 写真は大きくし過ぎない（新聞の図版サイズを基準に。関係者指示「でかい画像は表示しなくていい」） */
+.news-body img {
+  display: block;
+  max-width: min(100%, 560px);
+  height: auto;
+  border-radius: var(--radius-card);
+  margin-block: 1.2em;
+}
+
+.news-body a {
+  word-break: break-all;
+}
+
+.news-body ul,
+.news-body ol {
+  padding-inline-start: 1.4em;
+  margin-block: 0.9em;
+}
+
+.news-empty {
+  padding: 24px 4px;
+  color: var(--color-muted);
+}
+
+/* ---------- お知らせ専用ページ /news ---------- */
+.news-stack {
+  max-width: 760px;
+}
+
+.news-article {
+  padding-block: clamp(28px, 5vw, 44px);
+  border-top: 1px solid var(--color-border);
+  scroll-margin-top: 88px; /* sticky ヘッダー分を避けてアンカー位置で止まる */
+}
+
+.news-article:first-child {
+  border-top: 0;
+  padding-block-start: 0;
+}
+
+.news-article-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.news-article-title {
+  margin-block: var(--space-2) 0;
+  font-size: var(--fs-h3);
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+/* 記事の先頭写真（frontmatter の image）。大きすぎない幅に抑える */
+.news-figure {
+  display: block;
+  max-width: min(100%, 560px);
+  height: auto;
+  margin-block-start: var(--space-4);
+  border-radius: var(--radius-card);
+  border: 1px solid var(--color-border);
+}
+
+.news-article .section-bar {
+  margin-block-start: var(--space-2);
+}
+
+.news-article .news-body {
+  margin-block-start: var(--space-4);
+}
+
+/* ページ末尾の戻りリンク */
+.news-back {
+  margin-block-start: var(--space-7);
+}
+
+.news-back .btn-ghost {
+  border-color: transparent;
+  padding-inline: 0;
+}
+
+/* ---------- カード（活動・要点） ---------- */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 1023.98px) {
+  .card-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 639.98px) {
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card {
+  padding: 20px;
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+.card-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin-block-end: 8px;
+}
+
+.card-text {
+  font-size: 0.9375rem;
+}
+
+.card-meta {
+  font-size: 0.875rem;
+  color: var(--color-muted);
+  margin-block-start: 10px;
+}
+
+/* ---------- お問い合わせ: 経路カード（メール=仮ドメイン、フォーム=実URL。Xは確定待ち） ---------- */
+.contact-list {
+  display: grid;
+  gap: var(--space-3);
+  max-width: 640px;
+}
+
+.contact-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  min-height: 56px;
+  padding: var(--space-4);
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-brand);
+  border-radius: var(--radius-card);
+  transition: border-color var(--duration-fast) var(--ease-standard);
+}
+
+.contact-item:hover {
+  border-left-color: var(--color-contact-link-strong);
+}
+
+.contact-label {
+  font-weight: 700;
+  min-width: 112px;
+}
+
+/* 経路のリンク: タップ領域44px以上を確保。矢印は装飾。
+   色は濃い赤ではなくピンク寄りの赤（関係者指示 2026-10-18・tokens の --color-contact-link） */
+.contact-item a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 8px 4px;
+  color: var(--color-contact-link);
+  font-weight: 700;
+  text-underline-offset: 4px;
+}
+
+.contact-item a:hover {
+  color: var(--color-contact-link-strong);
+}
+
+.contact-item a .btn-arrow {
+  transition: translate var(--duration-fast) var(--ease-standard);
+}
+
+.contact-item a:hover .btn-arrow {
+  translate: 3px 0;
+}
+
+/* メールはリンクにせず、アドレスをそのまま表示する（関係者指示 2026-10-18）。
+   色は連絡先リンクと同じピンク寄りの赤（濃い赤にしない。同日指示） */
+.contact-address {
+  color: var(--color-contact-link);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  word-break: break-all;
+}
+
+.contact-pending {
+  font-size: 0.9375rem;
+  color: var(--color-muted);
+}
+
+/* 埋め込みカード（お問い合わせフォーム・Xタイムラインなど共通）。
+   一覧の経路カードと同じく左端に赤の細線で揃える */
+.contact-embed,
+.x-embed {
+  max-width: 640px;
+  margin-block-start: var(--space-6);
+  padding: var(--space-5);
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-brand);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+/* 見出しは本文と同じ黒で統一（関係者指示 2026-10-18）。補足のみグレー */
+.contact-embed-title,
+.x-embed-title {
+  margin-block-end: var(--space-3);
+  color: var(--color-text);
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.contact-embed-note,
+.x-embed-note {
+  color: var(--color-muted);
+  font-size: var(--fs-caption);
+  font-weight: 400;
+}
+
+.contact-form-iframe {
+  display: block;
+  width: 100%;
+  height: 760px;
+  border: 0;
+}
+
+.contact-embed-note-bottom,
+.x-embed-note-bottom {
+  margin-block-start: var(--space-3);
+  color: var(--color-muted);
+  font-size: var(--fs-caption);
+}
+
+.contact-embed-note-bottom a,
+.x-embed-note-bottom a {
+  color: var(--color-brand-strong);
+  font-weight: 700;
+  text-underline-offset: 3px;
+}
+
+/* ---------- フッター: ヘッダーより多くの情報を置く（サイトマップ・連絡先・今後のページ） ---------- */
+.site-footer {
+  position: relative;
+  margin-block-start: clamp(48px, 8vw, 80px);
+  padding-block: clamp(40px, 6vw, 64px) var(--space-5);
+  background: var(--color-surface-muted);
+  border-top: 1px solid var(--color-border);
+  overflow: clip;
+}
+
+/* ブランドの締め: 上端に赤の細ライン（装飾） */
+.site-footer::before {
+  content: "";
+  display: block;
+  width: 72px;
+  height: 4px;
+  margin-block-end: var(--space-5);
+  background: var(--color-brand);
+  border-radius: 2px;
+}
+
+/* 下でも世界が続く: 淡い紅の霞と星屑（セクション面と同じ --deco-* 管理・静止可） */
+.site-footer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(52% 44% at 88% 108%, var(--deco-wash), transparent 76%),
+    radial-gradient(2.4px 2.4px at 20% 40%, var(--deco-star) 45%, transparent 70%),
+    radial-gradient(2px 2px at 58% 26%, var(--deco-star) 45%, transparent 70%),
+    radial-gradient(2.6px 2.6px at 82% 62%, var(--deco-star) 45%, transparent 70%),
+    radial-gradient(1.8px 1.8px at 38% 76%, var(--deco-star) 45%, transparent 70%);
+}
+
+.footer-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(240px, 1.4fr) repeat(2, minmax(150px, 1fr));
+  gap: clamp(28px, 5vw, 56px);
+}
+
+@media (max-width: 767.98px) {
+  .footer-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.footer-brand {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.footer-brand-dot {
+  color: var(--color-brand);
+}
+
+.footer-catch {
+  margin-block-start: var(--space-2);
+  font-weight: 700;
+  font-size: var(--fs-small);
+}
+
+.footer-desc {
+  margin-block-start: var(--space-2);
+  max-width: 34em;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  line-height: 1.9;
+}
+
+.footer-contactline {
+  margin-block-start: var(--space-3);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 14px;
+  font-size: 0.875rem;
+}
+
+.footer-contact-addr {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.footer-formlink {
+  color: var(--color-brand-strong);
+  font-weight: 700;
+}
+
+.footer-coltitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-block-end: var(--space-3);
+  font-size: var(--fs-caption);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--color-muted);
+}
+
+.footer-nav ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+.footer-nav a {
+  color: var(--color-text);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.footer-nav a:hover,
+.footer-nav a:focus-visible {
+  color: var(--color-brand-strong);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
+/* 準備中ページ: リンクではなく「ここにページが生まれる」ことを明示する */
+.footer-soon {
+  color: var(--color-muted);
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.footer-soonnote {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--color-brand-strong);
+  border: 1px solid var(--color-brand-strong);
+  border-radius: 999px;
+  padding: 0 8px;
+  line-height: 1.6;
+  letter-spacing: 0.08em;
+}
+
+.footer-bottom {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-block-start: clamp(32px, 5vw, 56px);
+  padding-block-start: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.footer-copy {
+  color: var(--color-muted);
+  font-size: 0.875rem;
+}
+
+.footer-note {
+  color: var(--color-muted);
+  font-size: 0.875rem;
+}

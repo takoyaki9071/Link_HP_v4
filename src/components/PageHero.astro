@@ -1,0 +1,21 @@
+---
+/**
+ * 下層ページ共通のページ見出し。ヒーロー扱いだがホームのヒーローより小さく、
+ * 眉(eyebrow) → h1 → リード文の順で提示する。
+ */
+interface Props {
+  eyebrow?: string;
+  title: string;
+  lead?: string;
+}
+
+const { eyebrow, title, lead } = Astro.props;
+---
+
+<section class="page-hero" aria-labelledby="page-title">
+  <div class="container">
+    {eyebrow && <p class="page-hero-eyebrow">{eyebrow}</p>}
+    <h1 class="page-hero-title" id="page-title">{title}</h1>
+    {lead && <p class="page-hero-lead">{lead}</p>}
+  </div>
+</section>

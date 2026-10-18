@@ -1,0 +1,520 @@
+---
+/**
+ * ページ全体の世界 Canvas v3（2026-10-18 関係者指示）:
+ *  - これまでの「点と点がつながる線・三角形の面」の演出は**完全削除**（関係者指示・全バージョン撤去）。
+ *  - 左右に走っていたワイプの帯も**完全削除**。
+ *  - 代わりに 01 以降のセクション面に漂う**多様な図形**を敷く:
+ *      大きい・小さいの立体（八面体／四面体／六角柱／立方体）、
+ *      大気のある**真球**（輪郭の円+自転する環+衛星）、lenをまっすぐ〜ゆるく撓む**長い線**、小さな点。
+ *    ヒーローの立体たちと同じ語彙を、下のページではより創造的な配置で。
+ *
+ * - 描画はすべて滲んだ光（2層ストローク＋光スプライト）。ブランドの赤一色系。
+ * - リデュースモード: 自走せず**スクラブ**（スクロール中だけ動く）。
+ * - JS 無効環境では何も描かれない。
+ *
+ * 戻し方: BaseLayout.astro から <WorldCanvas /> を外すだけ。
+ */
+---
+<canvas class="world-canvas" aria-hidden="true"></canvas>
+
+<style is:global>
+  /* 本文より下・body 背景より上に敷く（main は z-index:1 で上に来る） */
+  .world-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+  }
+</style>
+
+<script>
+  const canvas = document.querySelector('.world-canvas');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (canvas instanceof HTMLCanvasElement && canvas.getContext) {
+    const ctx = canvas.getContext('2d');
+    const PAL = ['255, 0, 0', '255, 99, 71', '229, 43, 80', '255, 64, 129'];
+
+    let width = 0;
+    let height = 0;
+    let docH = 1;
+    let prevY = -1;
+    let scrollVel = 0; // フレーム毎のスクロールの勢い（図形に手応えを渡す）
+    let scrollY = window.scrollY;
+    let lastPaintedY = -1; // リデュース: 変化のあったフレームだけ描く
+
+    let glowK = document.documentElement.dataset.theme === 'dark' ? 1.7 : 1;
+    new MutationObserver(() => {
+      glowK = document.documentElement.dataset.theme === 'dark' ? 1.7 : 1;
+      lastPaintedY = -1; // テーマ切替後に再描画させる
+    }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+    window.addEventListener(
+      'scroll',
+      () => {
+        scrollY = window.scrollY;
+      },
+      { passive: true },
+    );
+
+    // ---------------------------------------------------------------
+    // 光の画材（ヒーローと同系の滲んだスプライト）
+    // ---------------------------------------------------------------
+    function makeSprite(rgb, core) {
+      const size = 64;
+      const c = document.createElement('canvas');
+      c.width = c.height = size;
+      const g = c.getContext('2d');
+      const grad = g.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+      grad.addColorStop(0, typeof core === 'number' ? 'rgba(255, 240, 238, ' + core + ')' : 'rgba(' + rgb + ', 0.8)');
+      grad.addColorStop(0.22, 'rgba(' + rgb + ', 0.45)');
+      grad.addColorStop(0.55, 'rgba(' + rgb + ', 0.13)');
+      grad.addColorStop(1, 'rgba(' + rgb + ', 0)');
+      g.fillStyle = grad;
+      g.fillRect(0, 0, size, size);
+      return c;
+    }
+
+    const SPRITES = PAL.map((rgb) => makeSprite(rgb));
+    const CORES = PAL.map((rgb) => makeSprite(rgb, 0.9));
+
+    function rand(a, b) {
+      return a + Math.random() * (b - a);
+    }
+    const clamp01 = (v) => Math.max(0, Math.min(1, v));
+
+    // ---------------------------------------------------------------
+    // 立体の定義（ヒーローの語彙の小型〜大型版）
+    // ---------------------------------------------------------------
+    const DEFS = {
+      octa: {
+        vs: [[1.5, 0, 0], [-1.5, 0, 0], [0, 1.5, 0], [0, -1.5, 0], [0, 0, 1.5], [0, 0, -1.5]],
+        fs: [[0, 2, 4], [2, 1, 4], [1, 3, 4], [0, 2, 5], [2, 1, 5], [1, 3, 5], [3, 0, 4], [3, 0, 5]],
+      },
+      tetra: {
+        vs: [[1, 1, 1], [1, -1, -1], [-1, 1, -1], [-1, -1, 1]],
+        fs: [[0, 1, 2], [0, 1, 3], [0, 2, 3], [1, 2, 3]],
+      },
+      hexPrism: (() => {
+        const R = 1.05;
+        const Hh = 0.7;
+        const vs = [];
+        const fs = [];
+        for (let s = 0; s < 2; s++) {
+          for (let i = 0; i < 6; i++) {
+            const a = (i / 6) * Math.PI * 2;
+            vs.push([Math.cos(a) * R, s === 0 ? -Hh : Hh, Math.sin(a) * R]);
+          }
+        }
+        fs.push([0, 1, 2, 3, 4, 5], [6, 7, 8, 9, 10, 11]);
+        for (let i = 0; i < 6; i++) fs.push([i, (i + 1) % 6, 6 + ((i + 1) % 6), 6 + i]);
+        return { vs, fs };
+      })(),
+      cube: {
+        vs: [[-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1], [-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1]],
+        fs: [
+          [0, 1, 2, 3], [5, 4, 7, 6], [4, 0, 3, 7],
+          [1, 5, 6, 2], [4, 5, 1, 0], [3, 2, 6, 7],
+        ],
+      },
+    };
+    // 稜線の一覧（面から重複なく取り出す）
+    for (const def of Object.values(DEFS)) {
+      def.edges = [];
+      const seen = new Set();
+      for (const f of def.fs) {
+        for (let i = 0; i < f.length; i++) {
+          const a = f[i];
+          const b = f[(i + 1) % f.length];
+          const key = a < b ? a + '_' + b : b + '_' + a;
+          if (!seen.has(key)) {
+            seen.add(key);
+            def.edges.push([a, b]);
+          }
+        }
+      }
+    }
+
+    // ---------------------------------------------------------------
+    // 世界の素材: 大きい・小さいの立体、真球、長い線、点
+    // ---------------------------------------------------------------
+    let items = [];
+
+    function makeSolids(scale) {
+      // 大きい3つ・中2つ・小さい4つの9体。でかいものほど存在感を出す
+      const kinds = ['octa', 'cube', 'hexPrism', 'tetra', 'octa', 'hexPrism', 'octa', 'tetra', 'hexPrism'];
+      const sizes = [
+        rand(104, 152),
+        rand(72, 110),
+        rand(60, 92),
+        rand(34, 54),
+        rand(38, 60),
+        rand(24, 40),
+        rand(46, 74),
+        rand(18, 32),
+        rand(26, 44),
+      ].map((s) => s * scale);
+      return kinds.map((kind, i) => ({
+        type: 'solid',
+        def: DEFS[kind],
+        size: sizes[i],
+        x: rand(-0.02, 0.98) * width,
+        y: 0, // setup で縦に均等分散させる
+        vx: rand(0.03, 0.1) * (i % 2 === 0 ? -1 : 1),
+        vy: rand(-0.05, 0.05),
+        rotY: rand(0, 6.28),
+        rotX: rand(-0.8, 0.8),
+        spinY: rand(0.005, 0.018) * (Math.random() < 0.5 ? -1 : 1),
+        spinX: rand(0.002, 0.008) * (Math.random() < 0.5 ? -1 : 1),
+        wobY: 0,
+        wobX: 0,
+        wander: rand(0.0004, 0.0013),
+        tint: Math.floor(rand(0, PAL.length)),
+        par: rand(0.4, 0.92),
+      }));
+    }
+
+    function makeSpheres(scale) {
+      // 真球: 大きいもの1つ（自転する環2本+衛星つき）と小さいもの1つ
+      return [
+        { r: rand(74, 112) * scale, sat: true },
+        { r: rand(30, 46) * scale, sat: false },
+      ].map((o) => ({
+        type: 'sphere',
+        r: o.r,
+        sat: o.sat,
+        satA: rand(0, 6.28),
+        satSpeed: rand(0.004, 0.009) * (Math.random() < 0.5 ? -1 : 1), // 衛星の公転
+        rotY: rand(0, 6.28),
+        rotX: rand(-0.5, 0.5),
+        spinY: rand(0.004, 0.012) * (Math.random() < 0.5 ? -1 : 1),
+        spinX: rand(0.002, 0.007) * (Math.random() < 0.5 ? -1 : 1),
+        wobY: 0,
+        wobX: 0,
+        wander: rand(0.0004, 0.0012),
+        x: rand(-0.02, 0.98) * width,
+        y: 0, // setup で縦に均等分散させる
+        vx: rand(0.02, 0.07) * (Math.random() < 0.5 ? -1 : 1),
+        vy: rand(-0.04, 0.04),
+        tint: Math.floor(rand(0, PAL.length)),
+        par: rand(0.4, 0.9),
+      }));
+    }
+
+    function makeArcs() {
+      // 長い線: ゆるく撓む弧（3本。下ほど大きく）
+      return [0, 1, 2].map((i) => ({
+        type: 'arc',
+        x: rand(0.05, 0.95) * width,
+        y: (0.14 + i * 0.3 + rand(-0.06, 0.06)) * docH,
+        len: rand(0.5, 1.1),           // 画面幅に対する長さ
+        bend: rand(40, 90) * (Math.random() < 0.5 ? -1 : 1), // 撓みの大きさ
+        slant: rand(-0.3, 0.3),
+        phase: rand(0, 6.28),
+        tint: Math.floor(rand(0, PAL.length)),
+        par: rand(0.35, 0.8),
+      }));
+    }
+
+    function makeDots() {
+      // 小さな点（つながらない。漂うだけの比較的多い星屑。装飾の一篇として）
+      return Array.from({ length: 10 }, () => ({
+        type: 'dot',
+        x: rand(-0.04, 1.04) * width,
+        y: rand(0, 1.02) * docH,
+        vx: rand(-0.05, 0.05),
+        vy: rand(-0.04, 0.04),
+        r: rand(1.2, 2.6),
+        tint: Math.floor(rand(0, PAL.length)),
+        par: rand(0.3, 0.85),
+        phase: rand(0, 6.28),
+      }));
+    }
+
+    function setup() {
+      const prevDocH = docH;
+      const prevWidth = width || window.innerWidth;
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+      docH = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+
+      const scale = Math.max(0.62, Math.min(1.25, width / 1180)); // 画面幅でゆるくスケール
+      if (!items.length) {
+        items = [
+          ...makeArcs(),
+          ...makeDots(),
+        ];
+        // 大きな図形（立体+真球）は縦に均等分散させ、どの高さを眺めても1〜2個は見えるようにする
+        const big = [...makeSolids(scale), ...makeSpheres(scale)];
+        const slots = big.length + Math.round(3 * scale); // 少し余分な枠を作って位置をまばらに
+        big.forEach((it, i) => {
+          const slot = Math.round((i / (big.length - 1)) * (slots - 1));
+          it.y = ((slot + rand(0.15, 0.85)) / slots) * docH;
+        });
+        items.push(...big);
+      } else if (prevDocH > 1) {
+        const kW = width / Math.max(1, prevWidth);
+        const kH = docH / Math.max(1, prevDocH);
+        for (const it of items) {
+          it.x *= kW;
+          it.y *= kH;
+        }
+      }
+    }
+
+    function softLineDim(rgb, alpha, wCore) {
+      if (alpha <= 0.004) return;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = 'rgba(' + rgb + ', ' + Math.min(1, alpha * 0.28).toFixed(3) + ')';
+      ctx.lineWidth = wCore * 2.8;
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(' + rgb + ', ' + Math.min(1, alpha).toFixed(3) + ')';
+      ctx.lineWidth = wCore;
+      ctx.stroke();
+    }
+
+    function drawDot(x, y, r, tint, alpha) {
+      const s = r * 6;
+      ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+      ctx.drawImage(CORES[tint], x - s, y - s, s * 2, s * 2);
+      ctx.globalAlpha = Math.max(0, Math.min(1, alpha * 0.7));
+      ctx.drawImage(SPRITES[tint], x - s * 2.4, y - s * 2.4, s * 4.8, s * 4.8);
+      ctx.globalAlpha = 1;
+    }
+
+    function rot3(x, y, z, cosY, sinY, cosX, sinX) {
+      const x1 = x * cosY - z * sinY;
+      const z1 = x * sinY + z * cosY;
+      const y1 = y * cosX - z1 * sinX;
+      const z2 = y * sinX + z1 * cosX;
+      return { x: x1, y: y1, z: z2 };
+    }
+
+    // 立体
+    function drawSolid(it, sy) {
+      const cosY = Math.cos(it.rotY);
+      const sinY = Math.sin(it.rotY);
+      const cosX = Math.cos(it.rotX);
+      const sinX = Math.sin(it.rotX);
+      const f = it.size * 0.62; // 定義座標 → 画面 px の係数
+      const pts = it.def.vs.map(([x, y, z]) => {
+        const p = rot3(x, y, z, cosY, sinY, cosX, sinX);
+        const per = 3.4 / (3.4 - p.z * 0.9);
+        return { x: it.x + p.x * f * per, y: sy + p.y * f * per, z: p.z };
+      });
+      // 面（奥→前。超淡く）
+      const order = it.def.fs
+        .map((fa) => ({ fa, z: fa.reduce((s, i) => s + pts[i].z, 0) / fa.length }))
+        .sort((a, b) => a.z - b.z);
+      ctx.lineCap = 'round';
+      for (const { fa, z } of order) {
+        ctx.fillStyle = 'rgba(' + PAL[it.tint] + ', ' + (z > 0 ? 0.13 : 0.065).toFixed(3) + ')';
+        ctx.beginPath();
+        ctx.moveTo(pts[fa[0]].x, pts[fa[0]].y);
+        for (let k = 1; k < fa.length; k++) ctx.lineTo(pts[fa[k]].x, pts[fa[k]].y);
+        ctx.closePath();
+        ctx.fill();
+      }
+      // 稜線（細い芯+にじみ）
+      const a = 0.62 * glowK;
+      for (const [i, j] of it.def.edges) {
+        ctx.beginPath();
+        ctx.moveTo(pts[i].x, pts[i].y);
+        ctx.lineTo(pts[j].x, pts[j].y);
+        softLineDim(PAL[it.tint], a, 1.7);
+      }
+      // 頂点の光（手前だけ）
+      for (const p of pts) {
+        if (p.z > 0.2) drawDot(p.x, p.y, it.size > 50 ? 1.9 : 1.3, it.tint, 0.55 * glowK);
+      }
+    }
+
+    // 真球（輪郭+自転する環。 كبيرةものは衛星も）
+    function drawSphere(it, sy) {
+      const cosY = Math.cos(it.rotY);
+      const sinY = Math.sin(it.rotY);
+      const cosX = Math.cos(it.rotX);
+      const sinX = Math.sin(it.rotX);
+      // 体積の滲み（端は落とす: 厚みのある球として読ませる）
+      const g = ctx.createRadialGradient(
+        it.x - it.r * 0.32, sy - it.r * 0.36, it.r * 0.1,
+        it.x, sy, it.r,
+      );
+      g.addColorStop(0, 'rgba(' + PAL[it.tint] + ', ' + (0.16 * glowK).toFixed(3) + ')');
+      g.addColorStop(0.6, 'rgba(' + PAL[it.tint] + ', ' + (0.09 * glowK).toFixed(3) + ')');
+      g.addColorStop(1, 'rgba(' + PAL[it.tint] + ', 0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(it.x, sy, it.r, 0, Math.PI * 2);
+      ctx.fill();
+      // 大円の環 2本（自転で回る。奥半分は淡く）
+      const rings = [
+        { u: [1, 0, 0], v: [0, 1, 0] },
+        { u: [0, 1, 0], v: [0, 0, 1] },
+      ];
+      for (const ring of rings) {
+        ctx.beginPath();
+        let startedSeg = false;
+        let lastFront = true;
+        const SEG = 40;
+        for (let i = 0; i <= SEG; i++) {
+          const t = (i / SEG) * Math.PI * 2;
+          const p = rot3(
+            ring.u[0] * Math.cos(t) + ring.v[0] * Math.sin(t),
+            ring.u[1] * Math.cos(t) + ring.v[1] * Math.sin(t),
+            ring.u[2] * Math.cos(t) + ring.v[2] * Math.sin(t),
+            cosY, sinY, cosX, sinX,
+          );
+          const x = it.x + p.x * it.r * 0.72;
+          const y = sy + p.y * it.r * 0.72;
+          if (!startedSeg) {
+            ctx.moveTo(x, y);
+            startedSeg = true;
+          } else {
+            ctx.lineTo(x, y);
+          }
+          lastFront = p.z > 0;
+        }
+        softLineDim(PAL[it.tint], 0.6 * glowK, 1.6);
+      }
+      // 輪郭
+      ctx.beginPath();
+      ctx.arc(it.x, sy, it.r * 0.78, 0, Math.PI * 2);
+      softLineDim(PAL[it.tint], 0.4 * glowK, 1.3);
+      // 衛星と軌道（大きい球のみ）
+      if (it.sat) {
+        const oa = it.satA;
+        const ex = Math.cos(oa) * it.r * 1.5;
+        const ey = Math.sin(oa) * it.r * 0.42;
+        // 軌道の楕円（傾けて描く）
+        ctx.beginPath();
+        ctx.ellipse(it.x, sy, it.r * 1.5, it.r * 0.42, -0.18, 0, Math.PI * 2);
+        softLineDim(PAL[it.tint], 0.28 * glowK, 1.2);
+        drawDot(it.x + ex, sy + ey, 2.8, it.tint, 0.9 * glowK);
+      }
+    }
+
+    // 長い線（ゆるく撓む弧。スクロールとともに揺れる経験に手応え）
+    function drawArc(it, sy) {
+      const t = performance.now() * 0.001;
+      const sw = it.len * width;
+      const x0 = it.x;
+      const x1 = it.x + sw;
+      const cps = {
+        x: it.x + sw * 0.5 + Math.sin(t * 0.3 + it.phase) * sw * 0.08,
+        y: sy + it.bend + Math.cos(t * 0.24 + it.phase) * 18,
+      };
+      ctx.beginPath();
+      ctx.moveTo(x0, sy + it.slant * sw * 0.2);
+      ctx.quadraticCurveTo(cps.x, cps.y, x1, sy - it.slant * sw * 0.2);
+      softLineDim(PAL[it.tint], 0.42 * glowK, 2);
+      // 弧の端の光る点
+      drawDot(x0, sy + it.slant * sw * 0.2, 2.2, it.tint, 0.7 * glowK);
+      drawDot(x1, sy - it.slant * sw * 0.2, 2.2, it.tint, 0.7 * glowK);
+    }
+
+    function paint() {
+      ctx.clearRect(0, 0, width, height);
+      // 長い線（最背面）
+      for (const it of items) {
+        if (it.type !== 'arc') continue;
+        const sy = it.y - scrollY * it.par;
+        if (sy > -160 && sy < height + 160) drawArc(it, sy);
+      }
+      // 立体・真球
+      for (const it of items) {
+        if (it.type !== 'solid' && it.type !== 'sphere') continue;
+        const sy = it.y - scrollY * it.par;
+        if (sy < -220 || sy > height + 220) continue;
+        if (it.type === 'solid') drawSolid(it, sy);
+        else drawSphere(it, sy);
+      }
+      // 点（最前面にちらり）
+      for (const it of items) {
+        if (it.type !== 'dot') continue;
+        const sy = it.y - scrollY * it.par;
+        if (sy < -30 || sy > height + 30) continue;
+        const tw = 0.75 + Math.sin(performance.now() * 0.001 + it.phase) * 0.25;
+        drawDot(it.x, sy, it.r, it.tint, 0.5 * glowK * tw);
+      }
+    }
+
+    // -------------------------------------------------------------
+    function step() {
+      const dy = prevY < 0 ? 0 : scrollY - prevY; // 初回フレームは勢いを入れない
+      prevY = scrollY;
+      scrollVel = scrollVel * 0.9 + dy * 0.1;
+
+      if (!document.hidden && !reduceMotion) {
+        // 自走: ゆっくり漂う（文書の範囲で回り込む）
+        for (const it of items) {
+          if (it.type === 'dot') {
+            it.x += it.vx;
+            it.y += it.vy;
+            if (it.y < -40) it.y = docH + 40;
+            if (it.y > docH + 40) it.y = -40;
+            if (it.x < -40) it.x = width + 40;
+            if (it.x > width + 40) it.x = -40;
+          } else if (it.type === 'arc') {
+            // 弧は撓みだけが揺れる（=drawArc で時間を参照）
+          } else {
+            const spinBoost = 1 + Math.min(4, Math.abs(scrollVel) * 0.09);
+            it.wobY += (Math.random() - 0.5) * it.wander;
+            it.wobY *= 0.985;
+            it.wobX += (Math.random() - 0.5) * it.wander * 0.7;
+            it.wobX *= 0.985;
+            if (Math.random() < 0.003) it.wobY = rand(-0.01, 0.01);
+            it.rotY += (it.spinY + (it.wobY || 0)) * spinBoost;
+            it.rotX += (it.spinX + (it.wobX || 0)) * spinBoost;
+            if (it.satA !== undefined) it.satA += it.satSpeed * spinBoost;
+            it.x += it.vx * spinBoost * 0.6;
+            it.y += (it.vy || 0) * spinBoost * 0.6;
+            if (it.y < -60) it.y = docH + 60;
+            if (it.y > docH + 60) it.y = -60;
+            if (it.x < -60) it.x = width + 60;
+            if (it.x > width + 60) it.x = -60;
+          }
+        }
+        paint();
+      } else {
+        // スクラブ（リデュース）: スクロールしている間だけ動く
+        if (dy !== 0 || lastPaintedY < 0) {
+          lastPaintedY = scrollY;
+          const boost = 1 + Math.min(8, Math.abs(dy) * 0.02);
+          for (const it of items) {
+            if (it.type === 'arc' || it.type === 'dot') continue;
+            it.wobY = (it.wobY || 0) + (Math.random() - 0.5) * (it.wander || 0.001) * Math.min(3, Math.abs(dy));
+            it.wobY *= 0.985;
+            it.rotY = (it.rotY || rand(0, 6.28)) + (it.spinY * 2.2) * boost * Math.max(1, Math.abs(dy) * 0.05) + (it.wobY || 0);
+            it.rotX = (it.rotX || 0) + (it.spinX * 2.2) * boost;
+            if (it.satA !== undefined) it.satA += it.satSpeed * boost * Math.max(1, Math.abs(dy) * 0.4);
+          }
+          paint();
+        }
+      }
+      requestAnimationFrame(step);
+    }
+
+    let resizeTimer = 0;
+    window.addEventListener('resize', () => {
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(() => {
+        setup();
+        lastPaintedY = -1;
+        if (reduceMotion) paint();
+      }, 140);
+    });
+
+    setup();
+    if (reduceMotion) {
+      paint();
+      prevY = scrollY;
+      lastPaintedY = scrollY;
+    }
+    requestAnimationFrame(step);
+  }
+</script>

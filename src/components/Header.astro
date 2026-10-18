@@ -1,0 +1,105 @@
+---
+---
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="/" aria-label="Link ホーム（トップへ）">
+      <!-- TODO(確認事項#5): ロゴの公式種別（Pre/Sec）確定後に差し替え。
+           黒/白2種を重ね、表示モードに応じて CSS で切替え（details は components.css）。
+           html[data-theme] 由来のため描写前に確定し、切替のちらつきも出ない -->
+      <img class="brand-logo" data-variant="light" src="/logo-black.svg" alt="Link" width="88" height="30" />
+      <img class="brand-logo" data-variant="dark" src="/logo-white.svg" alt="" width="88" height="30" aria-hidden="true" />
+    </a>
+
+    <!-- 下層ページからでも共通で動くよう、サイトルート基準のリンクにしている。
+         お問い合わせはCTAボタンのみ（導線の重複を避ける・2026-10-18 関係者指示） -->
+    <nav id="site-nav" class="site-nav" aria-label="サイト内メニュー">
+      <ul>
+        <li><a href="/#about">概要</a></li>
+        <li><a href="/about">団体紹介</a></li>
+        <li><a href="/activity">活動</a></li>
+        <li><a href="/news">お知らせ</a></li>
+      </ul>
+      <a class="btn btn-primary nav-cta" href="/#contact">お問い合わせ</a>
+    </nav>
+
+    <!-- 表示モード切替（ライト⇄ダーク）。選択は localStorage に保存し、未選択の間は OS 設定に追従。
+         アイコン: 月=ダークへ切り替え / 太陽=ライトへ切り替え の意 -->
+    <button id="theme-btn" class="theme-btn" type="button" aria-label="ダークモードに切り替え">
+      <svg class="theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" />
+      </svg>
+      <svg class="theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="4" />
+        <path d="M12 2v2" />
+        <path d="M12 20v2" />
+        <path d="m4.93 4.93 1.41 1.41" />
+        <path d="m17.66 17.66 1.41 1.41" />
+        <path d="M2 12h2" />
+        <path d="M20 12h2" />
+        <path d="m6.34 17.66-1.41 1.41" />
+        <path d="m19.07 4.93-1.41 1.41" />
+      </svg>
+    </button>
+
+    <button id="menu-btn" class="menu-btn" aria-expanded="false" aria-controls="site-nav">
+      <span class="visually-hidden">メニューを開閉</span>
+      <span class="menu-btn-bar" aria-hidden="true"></span>
+      <span class="menu-btn-bar" aria-hidden="true"></span>
+      <span class="menu-btn-bar" aria-hidden="true"></span>
+    </button>
+  </div>
+</header>
+
+<script>
+  const menuBtn = document.getElementById('menu-btn');
+  const nav = document.getElementById('site-nav');
+  const themeBtn = document.getElementById('theme-btn');
+
+  if (menuBtn instanceof HTMLElement && nav instanceof HTMLElement) {
+    const setOpen = (open: boolean) => {
+      menuBtn.setAttribute('aria-expanded', String(open));
+      nav.classList.toggle('open', open);
+      menuBtn.classList.toggle('is-open', open);
+    };
+
+    menuBtn.addEventListener('click', () => {
+      setOpen(menuBtn.getAttribute('aria-expanded') !== 'true');
+    });
+
+    // リンクをクリックしたら閉じる（ページ内リンクのため画面が切り替わらない）
+    nav.addEventListener('click', (event) => {
+      if (event.target instanceof Element && event.target.closest('a')) {
+        setOpen(false);
+      }
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && menuBtn.getAttribute('aria-expanded') === 'true') {
+        setOpen(false);
+        menuBtn.focus();
+      }
+    });
+  }
+
+  /* ---------- 表示モード切替（トグル） ---------- */
+  if (themeBtn instanceof HTMLElement) {
+    const root = document.documentElement;
+    const apply = () => {
+      const dark = root.dataset.theme === 'dark';
+      themeBtn.classList.toggle('is-dark', dark);
+      themeBtn.setAttribute('aria-label', dark ? 'ライトモードに切り替え' : 'ダークモードに切り替え');
+    };
+    apply();
+
+    themeBtn.addEventListener('click', () => {
+      const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+      root.dataset.theme = next;
+      try {
+        localStorage.setItem('link-theme', next);
+      } catch {
+        /* localStorage が使えない環境では現在ページの表示だけで閉じる */
+      }
+      apply();
+    });
+  }
+</script>

@@ -1,0 +1,1211 @@
+/* ホームページ固有のレイアウト（第1期） */
+
+.section {
+  padding-block: var(--section-pad);
+}
+
+/* =========================================================================
+   セクション面の空気感 — 「表紙の世界が下にも続く」押さえた版（2026-10-18 関係者指示）
+   白面/グレー面どちらにも: 淡い紅の霞 + 小さな星屑がゆっくり瞬く。
+   加えて（同日・指示「点→線→面を下まで」）**ページ全体の世界 Canvas**（WorldCanvas）
+   が各セクションの下を流れるため、面は半透明のベールにして世界が透けるようにする。
+   ヒーローとの違い: 図形の気配だけ（可読性優先・--deco-* / --veil-* で濃さ管理）。
+   reduced-motion では瞬きが停止して模様は静止したまま残る。
+   ========================================================================= */
+.section {
+  position: relative;
+  isolation: isolate; /* ::before を背景より上・本文より下の層に固定する */
+  /* 白面のベール: WorldCanvas の点・線・面が薄く透ける（ Trustees の掛け实验教学） */
+  background: linear-gradient(180deg, var(--veil-page-a), var(--veil-page-b));
+}
+
+.section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    /* 淡い紅の霞（右上と左下に置き、ページの下まで紅が続くようにする） */
+    radial-gradient(46% 40% at 92% 4%, var(--deco-wash), transparent 74%),
+    radial-gradient(38% 34% at 4% 96%, var(--deco-wash), transparent 74%),
+    /* 小さな星屑（点滅は ::after で制御） */
+    radial-gradient(2.5px 2.5px at 18% 24%, var(--deco-star) 45%, transparent 70%),
+    radial-gradient(2px 2px at 36% 62%, var(--deco-star) 45%, transparent 70%),
+    radial-gradient(2.8px 2.8px at 64% 18%, var(--deco-star) 45%, transparent 70%),
+    radial-gradient(1.8px 1.8px at 82% 48%, var(--deco-star) 45%, transparent 70%),
+    radial-gradient(2.2px 2.2px at 52% 86%, var(--deco-star) 45%, transparent 70%),
+    radial-gradient(1.6px 1.6px at 8% 40%, var(--deco-star) 45%, transparent 70%);
+  animation: section-breathe 60s ease-in-out infinite;
+}
+
+/* 星屑の瞬き（positionを変えて別の一枚に === 薄い桃色の合わせ呼吸） */
+.section::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(2px 2px at 30% 12%, var(--deco-star) 45%, transparent 70%),
+    radial-gradient(2.4px 2.4px at 70% 38%, var(--deco-star) 45%, transparent 70%),
+    radial-gradient(1.8px 1.8px at 44% 74%, var(--deco-star) 45%, transparent 70%),
+    radial-gradient(2.6px 2.6px at 90% 80%, var(--deco-star) 45%, transparent 70%),
+    radial-gradient(2px 2px at 14% 66%, var(--deco-star) 45%, transparent 70%);
+  opacity: 0.5;
+  animation: section-twinkle 9s ease-in-out infinite alternate;
+}
+
+@keyframes section-breathe {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.75; }
+}
+
+@keyframes section-twinkle {
+  from { opacity: 0.2; }
+  to { opacity: 0.8; }
+}
+
+/* セクションごとに瞬きの位相をずらす（ページ全体で刻々と変わる） */
+#about::after { animation-delay: -3s; }
+#activities::after { animation-delay: -6s; }
+#contact::after { animation-delay: -1.5s; }
+
+/* お知らせは表紙の直後: 霞を上端いっぱいに置いて、ヒーローの光が流れ落ちる感じに */
+#news::before {
+  background:
+    radial-gradient(70% 46% at 50% -6%, var(--deco-wash), transparent 80%),
+    radial-gradient(40% 34% at 88% 72%, var(--deco-wash), transparent 74%),
+    radial-gradient(2.5px 2.5px at 18% 34%, var(--deco-star) 45%, transparent 70%),
+    radial-gradient(2px 2px at 40% 70%, var(--deco-star) 45%, transparent 70%),
+    radial-gradient(2.8px 2.8px at 66% 22%, var(--deco-star) 45%, transparent 70%),
+    radial-gradient(1.8px 1.8px at 84% 58%, var(--deco-star) 45%, transparent 70%),
+    radial-gradient(2.2px 2.2px at 54% 88%, var(--deco-star) 45%, transparent 70%);
+}
+
+/* ページ末尾のセクションは下端の霞を外す（2026-10-18 関係者指示「お問い合わせの最後の背景がおかしい」）:
+   フッターとの境界で「赤 → 黒 → 赤」と霞が分断されて見えるため、下は一度静かに落とす。
+   上端の霞と星屑は残す。/about の最終セクション（page-cta）も同じ構造なのであわせる */
+#contact::before,
+#page-cta::before {
+  background:
+    radial-gradient(46% 40% at 92% 4%, var(--deco-wash), transparent 74%),
+    radial-gradient(2.5px 2.5px at 18% 24%, var(--deco-star) 45%, transparent 70%),
+    radial-gradient(2px 2px at 36% 62%, var(--deco-star) 45%, transparent 70%),
+    radial-gradient(2.8px 2.8px at 64% 18%, var(--deco-star) 45%, transparent 70%),
+    radial-gradient(1.8px 1.8px at 82% 48%, var(--deco-star) 45%, transparent 70%),
+    radial-gradient(2.2px 2.2px at 52% 86%, var(--deco-star) 45%, transparent 70%),
+    radial-gradient(1.6px 1.6px at 8% 40%, var(--deco-star) 45%, transparent 70%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section::before,
+  .section::after {
+    animation: none; /* 模様は静止したまま残す（情報・雰囲気は失わせない） */
+  }
+
+  .section::after {
+    opacity: 0.55;
+  }
+}
+
+.section-alt {
+  /* 超淡い赤のドット模様を敷き、非常にゆっくり対角へ流れる（装飾）。
+     下地は半透明ベールで WorldCanvas を透す（--veil-alt トークンで濃さ管理） */
+  background:
+    radial-gradient(var(--deco-dot-alt) 1px, transparent 1.2px) 0 0 / 24px 24px,
+    var(--veil-alt);
+  animation: alt-pattern-pan 140s linear infinite;
+}
+
+@keyframes alt-pattern-pan {
+  to {
+    background-position: 240px 480px, 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section-alt {
+    animation: none;
+  }
+}
+
+/* ---------- ヒーロー: 画像なし。赤1色・余白・タイポグラフィで構成 ----------
+   面は不透明（世界 Canvas がヒーロー内で二重に透けるのを防ぐ）。 */
+.hero {
+  position: relative;
+  isolation: isolate; /* レイヤー順を固定（背景→canvas→装飾→本文。canvasや枠が文字に乗らないようにする） */
+  overflow: hidden;
+  padding-block: clamp(88px, 16vw, 180px);
+  background: var(--color-background);
+}
+
+/* ヒーロー内のレイヤー順: bg(0) → press(0) → canvas(1) → トンボ/背表紙(2) → 本文(3) */
+.hero-inner {
+  position: relative;
+  z-index: 3;
+}
+
+/* 装飾（aria-hidden 相当・装飾のみ）: ブランド赤の滲みと細線の円 */
+.hero::before,
+.hero::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.hero::before {
+  width: clamp(320px, 42vw, 640px);
+  aspect-ratio: 1;
+  top: -22vw;
+  right: -14vw;
+  background: radial-gradient(closest-side, var(--deco-wash), transparent);
+}
+
+.hero::after {
+  width: clamp(120px, 14vw, 200px);
+  aspect-ratio: 1;
+  bottom: -60px;
+  left: 4vw;
+  border: 1px solid var(--deco-ring);
+  animation: hero-ring-float 12s var(--ease-standard) infinite alternate;
+}
+
+@keyframes hero-ring-float {
+  from {
+    transform: translate3d(0, -4px, 0);
+  }
+
+  to {
+    transform: translate3d(-6px, 6px, 0);
+  }
+}
+
+/* 背景のゆるやかな演出（2026-10-18 追加）。装飾のみで情報は運ばない。
+   - 柔らかな赤の滲みがゆっくり漂う
+   - ドット／斜線の模様が静かに交差して移り変わる */
+.hero-bg {
+  z-index: 0;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.hero-blob {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, var(--deco-wash), transparent);
+  animation: hero-blob-drift 26s var(--ease-standard) infinite alternate;
+}
+
+.hero-blob-a {
+  width: clamp(340px, 44vw, 720px);
+  aspect-ratio: 1;
+  top: -18vw;
+  right: -12vw;
+}
+
+.hero-blob-b {
+  width: clamp(200px, 26vw, 420px);
+  aspect-ratio: 1;
+  bottom: -14vw;
+  left: -6vw;
+  opacity: 0.8;
+  animation-duration: 34s;
+  animation-delay: -10s;
+}
+
+@keyframes hero-blob-drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  to {
+    transform: translate3d(-3%, 5%, 0) scale(1.06);
+  }
+}
+
+/* 模様は右上に集中させ、外へゆるくフェードさせる（mask） */
+.hero-pattern {
+  position: absolute;
+  inset: 0;
+  -webkit-mask-image: radial-gradient(72% 70% at 72% 14%, #000, transparent);
+  mask-image: radial-gradient(72% 70% at 72% 14%, #000, transparent);
+}
+
+.hero-pattern-dots {
+  background-image: radial-gradient(var(--deco-dot) 1.2px, transparent 1.3px);
+  background-size: 22px 22px;
+  animation: hero-pattern-fade 18s ease-in-out infinite alternate-reverse;
+}
+
+.hero-pattern-stripes {
+  background-image: repeating-linear-gradient(-45deg, var(--deco-stripe) 0 1px, transparent 1px 14px);
+  animation: hero-pattern-fade 18s ease-in-out infinite alternate;
+}
+
+@keyframes hero-pattern-fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* 動きの抑制: 模様と滲みは静止して常時表示（情報は失われない） */
+@media (prefers-reduced-motion: reduce) {
+  .hero-bg .hero-blob,
+  .hero-bg .hero-pattern,
+  .hero::after {
+    animation: none;
+  }
+
+  .hero-pattern-dots {
+    opacity: 1;
+  }
+
+  .hero-pattern-stripes {
+    opacity: 0;
+  }
+}
+
+/* 滲み・模様の濃さは --deco-* トークンで管理（ダークモードでは tokens.css が濃い赤光に差し替える） */
+
+/* =========================================================================
+   デザインブック演出 v4.1（試作 2026-10-18。版元情報の一行は撤去・背表紙はランダム文字）
+   「OFFICIAL BOOK の表紙」を意識した編集デザインの記号。全て装飾。
+   戻し方: index.astro の当該ブロック（hero-press / hero-corners /
+   hero-spine）と、このセクションを丸ごと削除する。
+   ========================================================================= */
+.hero-press {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  pointer-events: none;
+  /* ノートのような細い方眼。見出しの左側を避け、右〜全体に薄く敷く */
+  background-image:
+    linear-gradient(var(--deco-stripe) 1px, transparent 1px),
+    linear-gradient(90deg, var(--deco-stripe) 1px, transparent 1px);
+  background-size: 72px 72px;
+  -webkit-mask-image: radial-gradient(120% 140% at 88% 30%, #000 26%, transparent 64%);
+  mask-image: radial-gradient(120% 140% at 88% 30%, #000 26%, transparent 64%);
+}
+
+/* 面付けのトンボ（4隅のLマーク） */
+.hero-corners i {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border: 0 solid var(--deco-ring);
+  opacity: 0.9;
+}
+
+/* トンボは本文より下・canvas より上（面付けの記号は紙面に重く見せない） */
+.hero-corners {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.hero-corners i:nth-child(1) {
+  top: 18px;
+  left: 18px;
+  border-top-width: 1px;
+  border-left-width: 1px;
+}
+
+.hero-corners i:nth-child(2) {
+  top: 18px;
+  right: 18px;
+  border-top-width: 1px;
+  border-right-width: 1px;
+}
+
+.hero-corners i:nth-child(3) {
+  bottom: 18px;
+  left: 18px;
+  border-bottom-width: 1px;
+  border-left-width: 1px;
+}
+
+.hero-corners i:nth-child(4) {
+  bottom: 18px;
+  right: 18px;
+  border-bottom-width: 1px;
+  border-right-width: 1px;
+}
+
+/* 版元情報（VOL.01 … の一行）は関係者指示で撤去（2026-10-18） */
+
+/* 背表紙: 右端の縦書きゴースト字（枠線の文字・超薄い赤） */
+.hero-spine {
+  position: absolute;
+  bottom: 18px;
+  right: 6px;
+  z-index: 2;
+  writing-mode: vertical-rl;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--deco-spine);
+  font-size: clamp(64px, 8vw, 112px);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.16em;
+  pointer-events: none;
+  user-select: none;
+  /* 目次テープの上ではtext文字が混ざり過ぎて見えなくなるため、下端をフェード消す */
+  -webkit-mask-image: linear-gradient(to bottom, #000 76%, transparent);
+  mask-image: linear-gradient(to bottom, #000 76%, transparent);
+}
+
+/* モバイルでは右端を文字に譲る（過激装飾は圧迫とならないようにする判断） */
+@media (max-width: 767.98px) {
+  .hero-spine {
+    display: none;
+  }
+}
+
+/* 表紙の目次テープ: 実リンクで下層の章へ続く（「サイトはこのまま続く」の合図） */
+.hero-toc {
+  margin-block-start: clamp(40px, 7vw, 72px);
+  border-top: 1px solid var(--color-border);
+  position: relative;
+}
+
+/* 上端の左に赤の短冊（hero-bar と同じ記号で表紙→本文を連結する） */
+.hero-toc::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: 0;
+  width: 72px;
+  height: 3px;
+  background: var(--color-brand);
+}
+
+.hero-toc ul {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hero-toc li + li {
+  border-inline-start: 1px solid var(--color-border);
+}
+
+.hero-toc a {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 14px 12px 14px 0;
+  color: var(--color-text);
+  font-size: var(--fs-small);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+.hero-toc a .toc-num {
+  color: var(--color-brand-strong);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.hero-toc a:hover .toc-label,
+.hero-toc a:focus-visible .toc-label {
+  color: var(--color-brand-strong);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
+/* 操作域を44px以上確保しつつ体裁を保つ（ボード全体の上塗り分け） */
+@media (max-width: 767.98px) {
+  .hero-toc ul {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .hero-toc a {
+    min-height: 44px;
+  }
+
+  .hero-toc li:nth-child(3) {
+    /* 2列になった際の区切りをやり直す */
+    border-inline-start: none;
+  }
+
+  .hero-toc li:nth-child(odd) {
+    border-inline-start: none;
+  }
+
+  .hero-toc li:nth-child(3),
+  .hero-toc li:nth-child(4) {
+    border-block-start: 1px solid var(--color-border);
+  }
+}
+
+.hero-inner {
+  position: relative;
+}
+
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--color-brand-strong);
+  font-size: var(--fs-caption);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.hero-eyebrow::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  background: var(--color-brand);
+}
+
+.hero-copy {
+  margin-block-start: var(--space-5);
+  font-size: clamp(1.9rem, 1.35rem + 2.8vw, 3.75rem);
+  font-weight: 800;
+  line-height: 1.35;
+  letter-spacing: 0.04em;
+  /* 背景（ヒーローの滲み）が濃くなってきたため、文字にうすい落ち影を入れて可読性を保つ
+     （関係者指示 2026-10-18。濃さは tokens.css の --shadow-hero-text） */
+  text-shadow: var(--shadow-hero-text);
+}
+
+/* 見出し内の強調（キャッチコピーの「はじまり」）: 関係者指示で**通常のゴシック**に戻す
+   （明朝表記は不要。赤色の強調のみ残す） */
+.hero-accent {
+  color: var(--color-brand);
+}
+
+.hero-bar {
+  display: block;
+  width: 72px;
+  height: 6px;
+  margin-block: var(--space-5);
+  background: var(--color-brand);
+  border-radius: 3px;
+}
+
+.hero-lead {
+  max-width: 34em;
+  font-size: var(--fs-lead);
+  line-height: 1.95;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-block-start: var(--space-6);
+}
+
+.hero-scroll {
+  position: absolute;
+  z-index: 3;
+  bottom: 24px;
+  left: 50%;
+  translate: -50% 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-muted);
+  font-size: var(--fs-caption);
+  letter-spacing: 0.14em;
+}
+
+.hero-scroll::after {
+  content: "";
+  width: 1px;
+  height: 40px;
+  background: linear-gradient(var(--color-brand), transparent);
+  transform-origin: top;
+  animation: hero-scroll-line 2.2s var(--ease-standard) infinite;
+}
+
+@keyframes hero-scroll-line {
+  0% {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+
+  35% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scaleY(1);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-scroll::after {
+    animation: none;
+    opacity: 0.5;
+  }
+}
+
+@media (max-width: 639.98px) {
+  .hero-scroll {
+    display: none;
+  }
+}
+
+/* ---------- Linkについて ---------- */
+.about-lead {
+  max-width: 42em;
+  font-size: var(--fs-lead);
+  line-height: 1.95;
+}
+
+/* 要点カード（方法・対象・進行中の3枚） */
+.point-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+  margin-block-start: var(--space-6);
+}
+
+@media (max-width: 767.98px) {
+  .point-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.point-card {
+  padding: var(--space-5) var(--space-4);
+}
+
+.point-card .card-eyebrow {
+  margin-block-end: var(--space-2);
+  color: var(--color-brand-strong);
+  font-size: var(--fs-caption);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.point-text {
+  font-size: var(--fs-small);
+  line-height: 1.8;
+}
+
+/* セクション先頭の補足（対象・拠点など） */
+.section-lead {
+  margin-block-end: var(--space-5);
+  font-size: var(--fs-small);
+  color: var(--color-muted);
+}
+
+/* ---------- 活動 ---------- */
+.activities-pending {
+  max-width: 42em;
+}
+
+/* ---------- 下層ページ共通 ---------- */
+.page-hero {
+  padding-block: clamp(48px, 8vw, 88px) clamp(32px, 5vw, 56px);
+  /* ヒーローと同様に不透明面で世界 Canvas を覆う（二重描画を避ける） */
+  background: var(--color-background);
+}
+
+.page-hero-eyebrow {
+  color: var(--color-brand-strong);
+  font-size: var(--fs-caption);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.page-hero-title {
+  margin-block-start: var(--space-2);
+  font-size: clamp(2rem, 1.6rem + 1.8vw, 2.75rem);
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
+}
+
+.page-hero-lead {
+  margin-block-start: var(--space-4);
+  max-width: 40em;
+  color: var(--color-muted);
+  font-size: var(--fs-lead);
+  line-height: 1.9;
+}
+
+/* 下層ページ末尾の CTA（中央寄せ） */
+.centered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  text-align: center;
+}
+
+.page-cta-note {
+  color: var(--color-muted);
+  font-size: var(--fs-small);
+}
+
+/* ---------- 団体紹介ページ ---------- */
+
+/* Mission / Vision の2列カード */
+/* ---------- 理念（MVV: 縦1列で上から順に Mission → Vision → Values） ---------- */
+.mvv-stack {
+  display: grid;
+  gap: var(--space-6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mvv-block {
+  padding: var(--space-7) var(--space-6);
+}
+
+/* ブロック見出し: 大きくてタイトルらしい英文（タイトル風のまま本文を足す構成） */
+.mvv-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--color-brand);
+  font-size: clamp(1.35rem, 1.1rem + 1.1vw, 1.85rem);
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* 見出しの後ろに赤の細ライン（装飾） */
+.mvv-eyebrow::after {
+  content: "";
+  flex: 1;
+  max-width: 120px;
+  height: 2px;
+  background: var(--color-brand);
+  border-radius: 2px;
+  opacity: 0.35;
+}
+
+/* 定義文（承認済みの MVV 本体）: 引用風の赤い左線で強調 */
+.mvv-statement {
+  margin-block: var(--space-4) var(--space-4);
+  padding-inline-start: 0.85em;
+  border-inline-start: 3px solid var(--color-brand);
+  font-size: clamp(1.15rem, 1rem + 0.55vw, 1.45rem);
+  font-weight: 700;
+  line-height: 1.9;
+}
+
+/* 解説文（story・仮掲載）: 本文らしく落ち着いた行幅で */
+.mvv-story {
+  margin: 0;
+  max-width: 40em;
+  color: var(--color-text);
+  font-size: var(--fs-body);
+  line-height: 2;
+}
+
+/* Values ブロック内の5枚タイル */
+.mvv-block-value .value-grid {
+  margin-block-start: var(--space-5);
+}
+
+.value-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--space-4);
+}
+
+.value-tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+}
+
+/* Value タイル: 将来の画像差し替えスペース（正方形）。
+   画像が入るまで漢字を中央に表示する（mvv.json の image で切替） */
+.value-media {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface-muted);
+  overflow: hidden;
+}
+
+.value-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 大きな書字は装飾ではなく内容。
+   赤は大サイズ（24px/700相当以上）のため AA 大文字（3:1）の基準を満たす */
+.value-char {
+  font-size: clamp(2.25rem, 1.8rem + 1.6vw, 3rem);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--color-brand);
+}
+
+.value-text {
+  font-size: var(--fs-small);
+  line-height: 1.8;
+}
+
+/* 沿革: 用語と内容の行リスト */
+.fact-list {
+  margin: 0;
+}
+
+.fact-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2) var(--space-5);
+  padding: var(--space-4) var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.fact-row:first-child {
+  border-top: 1px solid var(--color-border);
+}
+
+.fact-term {
+  flex-shrink: 0;
+  min-width: 7em;
+  color: var(--color-brand-strong);
+  font-weight: 700;
+}
+
+.fact-text {
+  margin: 0;
+  font-size: var(--fs-body);
+  line-height: 1.8;
+}
+
+/* ---------- 沿革タイムライン（2026-10-18 関係者指示「横に広がる線＋点＋斜めに日付でストーリー化」） ---------- */
+/* 線の位置は日付の高さ+ドット中心。.hist-date の高さとセットで調整する */
+.hist-timeline {
+  --hist-line: 45px;
+  position: relative;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(200px, 1fr);
+  gap: var(--space-5);
+  margin: 0;
+  padding: var(--space-2) 0 var(--space-4);
+  list-style: none;
+}
+
+/* 線: ドットの中心を通る。セクションが可視化されたら左から広がる（1度きり） */
+.hist-timeline::before {
+  content: "";
+  position: absolute;
+  top: var(--hist-line);
+  right: 8px;
+  left: 8px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--color-brand), rgb(255 0 0 / 0.12));
+  border-radius: 1px;
+}
+
+html.js .hist-timeline::before {
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 1.2s var(--ease-standard) 0.1s;
+}
+
+html.js .reveal.is-visible .hist-timeline::before {
+  transform: scaleX(1);
+}
+
+.hist-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  scroll-snap-align: start;
+}
+
+/* 日付は斜めに置く（デザインのアクセント）。書体は本文と同じゴシック
+   （2026-10-18 関係者指示「沿革と実績の日付はゴシックで」— 明朝から変更） */
+.hist-date {
+  display: inline-block;
+  height: 34px;
+  margin-left: -2px;
+  transform: rotate(-4deg);
+  transform-origin: left bottom;
+  color: var(--color-brand-strong);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.hist-dot {
+  width: 14px;
+  height: 14px;
+  margin: 4px 0 10px;
+  border-radius: 50%;
+  background: var(--color-brand);
+  box-shadow: 0 0 0 4px rgb(255 0 0 / 0.12);
+}
+
+html.js .hist-dot {
+  opacity: 0;
+  transform: scale(0.3);
+  transition:
+    opacity var(--duration-reveal) var(--ease-standard) calc(0.25s + var(--hist-i, 0) * 0.14s),
+    transform var(--duration-reveal) var(--ease-standard) calc(0.25s + var(--hist-i, 0) * 0.14s);
+}
+
+html.js .reveal.is-visible .hist-dot {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.hist-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: var(--fs-small);
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+/* 「準備中」チップ（Lab. の開始予定など） */
+.hist-pending {
+  padding: 0 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.7;
+  white-space: nowrap;
+}
+
+.hist-story {
+  margin: 6px 0 0;
+  color: var(--color-muted);
+  font-size: var(--fs-small);
+  line-height: 1.8;
+}
+
+/* 狭い画面では横に流す（スナップ+細いスクロールバー） */
+@media (max-width: 719.98px) {
+  .hist-timeline {
+    grid-auto-columns: minmax(220px, 1fr);
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    padding-inline-end: var(--space-4);
+    scrollbar-width: thin;
+  }
+}
+
+/* タイムラインに載せにくい事実（拠点・提携先・実績）は従来の事実リストで補う */
+.hist-facts {
+  margin-block-start: var(--space-6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.js .hist-timeline::before,
+  html.js .hist-dot {
+    transform: none;
+    opacity: 1;
+    transition: none;
+  }
+}
+
+/* 運営メンバー（現状の枠組みのみ公開） */
+.team-note {
+  margin-block-end: var(--space-3);
+  font-size: var(--fs-body);
+}
+
+/* メンバー placeholder（§10 行8 の公開同意待ち。about.json の members で差し替え） */
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--space-4);
+  margin: var(--space-5) 0 var(--space-4);
+  padding: 0;
+  list-style: none;
+}
+
+.member-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: var(--space-3);
+}
+
+/* 写真枠（3:4の縦。photo 設定後は <img> で置き換わる） */
+.member-photo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface-muted);
+  overflow: hidden;
+}
+
+.member-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.member-photo-label {
+  color: var(--color-muted);
+  font-size: var(--fs-caption);
+  letter-spacing: 0.08em;
+  text-align: center;
+  line-height: 1.8;
+}
+
+.member-name {
+  margin: 0;
+  font-size: var(--fs-small);
+  font-weight: 700;
+}
+
+.member-name-note {
+  display: block;
+  margin-block-start: 2px;
+  color: var(--color-muted);
+  font-size: var(--fs-caption);
+  font-weight: 500;
+}
+
+/* 役職チップ（赤の面。仮の並び — members の role が優先される） */
+.member-role {
+  align-self: flex-start;
+  margin: 0;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--color-btn-primary-bg);
+  color: var(--color-on-inverse);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.7;
+}
+
+/* ハッシュタグ（仮。公開同意後に個人ごとのタグへ差し替え。破線枠=仮掲載の合図） */
+.member-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.member-tag {
+  padding: 1px 8px;
+  border: 1px dashed var(--color-border);
+  border-radius: 999px;
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  line-height: 1.7;
+}
+
+/* ---------- 代表からのご挨拶（A4縦長のPDF枠。src/content/greeting/ で管理） ---------- */
+.greeting-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* 準備中の A4 受け入れ枠（210:297 = A4縦） */
+.greeting-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: min(420px, 100%);
+  aspect-ratio: 210 / 297;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+
+.greeting-page-label {
+  color: var(--color-brand);
+  font-size: var(--fs-h3);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.greeting-page-note {
+  color: var(--color-muted);
+  font-size: var(--fs-caption);
+  line-height: 1.9;
+  text-align: center;
+  padding-inline: var(--space-4);
+}
+
+.greeting-note {
+  margin-block-start: var(--space-3);
+  color: var(--color-muted);
+  font-size: var(--fs-caption);
+}
+
+/* PDF 公開時: A4 縦長に合わせて高めのビューア */
+.greeting-pdf-frame {
+  width: min(560px, 100%);
+}
+
+.greeting-pdf {
+  width: 100%;
+  height: min(760px, 120vh);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+
+/* 文章のみ公開時の本文カード */
+.greeting-card {
+  width: min(720px, 100%);
+  padding: var(--space-7) var(--space-6);
+}
+
+.greeting-card h2 {
+  margin-block: var(--space-5) var(--space-3);
+  font-size: var(--fs-h3);
+}
+
+/* 仮掲載の明示注記（未承認コンテンツの扱い: docs/ホーム設計プラン.md §5） */
+.provisional-note {
+  margin-block-start: var(--space-5);
+  color: var(--color-muted);
+  font-size: var(--fs-caption);
+}
+
+/* ---------- 活動（ホームのカード一覧） ---------- */
+.activity-grid {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+@media (max-width: 639.98px) {
+  .activity-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.activity-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  /* 活動カードは「先のページへの入り口」カード — 落ち影で押し出し感を持たせる
+     （関係者指示 2026-10-18: 活動ページ/サービスページへの導線の下準備。hover は影のみ） */
+  box-shadow:
+    0 2px 4px rgba(40, 10, 10, 0.07),
+    0 14px 30px -14px rgba(40, 10, 10, 0.26);
+  transition: box-shadow var(--duration-fast) var(--ease-standard);
+}
+
+.activity-card:hover {
+  box-shadow:
+    0 3px 6px rgba(40, 10, 10, 0.09),
+    0 20px 36px -16px rgba(40, 10, 10, 0.32);
+}
+
+.activity-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+
+/* 実施状況チップ。公開中=赤面、その他=白面 */
+.activity-status {
+  border: 1px solid var(--color-brand-strong);
+  border-radius: 999px;
+  padding: 1px 10px;
+  color: var(--color-brand-strong);
+  background: var(--color-background);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+.activity-card[data-status="公開中"] .activity-status {
+  background: var(--color-btn-primary-bg);
+  color: var(--color-on-inverse);
+}
+
+.activity-target {
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.activity-summary {
+  color: var(--color-muted);
+  font-size: var(--fs-small);
+}
+
+/* 「こんな人に」「想い」の一文（AI起案・仮掲載）。用語と内容の小さな行リスト */
+.activity-detail {
+  margin: var(--space-4) 0 0;
+  padding-block-start: var(--space-3);
+  border-block-start: 1px dashed var(--color-border);
+  display: grid;
+  gap: var(--space-2);
+}
+
+.activity-detail-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2) var(--space-3);
+}
+
+.activity-detail-term {
+  flex-shrink: 0;
+  color: var(--color-brand-strong);
+  font-size: var(--fs-caption);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.activity-detail-text {
+  margin: 0;
+  font-size: var(--fs-small);
+  line-height: 1.8;
+}
+
+.activity-note {
+  margin-block-start: var(--space-4);
+}
+
+/* ---------- お問い合わせ ---------- */
+.contact-note {
+  max-width: 42em;
+  margin-block-end: var(--space-5);
+}

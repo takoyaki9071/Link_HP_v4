@@ -1,0 +1,477 @@
+---
+/**
+ * 開幕演出 v2（2026-10-18・関係者指示「ゆっくり落ち着いた動きに+ストーリー性を持たせたい」）:
+ *  1. 白い点が浮かぶ → 2. 赤く光る → 3. 線が右へ静かに伸びる →
+ *  4. 時計回りに白い正方形を描く → 5. 面が立体（立方体）になる →
+ *  6. 点が赤く光り、線と面が徐々に（フワッと）赤く染まる →
+ *  7. 明朝体で「すべての人の、はじまりをLinkする。」が浮ぶ → 8. 白熱のフラッシュで開幕。
+ *
+ * - 動きはすべて緩やかな曲線（スパッとした跳びはねがない）。段階はわずかに重ねて連続に繋げる。
+ * - 演出中は本文の .reveal を html.intro-wait で待たせ、開幕と同時に立ち上がる（BaseLayout 参照）。
+ * - wheel / touch / key / click / スクロールで**いつでもスキップ可**（すぐ開く）。
+ * - prefers-reduced-motion: 動きを最小にした短縮版（交差フェード中心・総尺約2.7秒）。
+ * - JS 無効環境では非表示（html:not(.js)）。深くスクロール済みの再読込でも発動しない。
+ *
+ * 戻し方: index.astro の <IntroCanvas /> を外すだけ（BaseLayout の reveal 待ちは
+ * intro-wait クラスがないとき即時に始まるため、外したままでも無害）。
+ */
+---
+<div class="intro" aria-hidden="true">
+  <canvas class="intro-canvas"></canvas>
+  <p class="intro-copy">すべての人の、<span class="intro-accent">はじまり</span>をLinkする。</p>
+</div>
+
+<style is:global>
+  /* 本文のフェードインを開幕まで待たせる（reveal は BaseLayout の script） */
+  html.intro-wait .reveal {
+    visibility: hidden;
+  }
+
+  /* 演出中はスクロールを止める（終わったら解除） */
+  html.intro-lock {
+    overflow: hidden;
+  }
+
+  .intro {
+    position: fixed;
+    inset: 0;
+    z-index: 90; /* ヘッダーより上 */
+    background: var(--color-background); /* ライト/ダークに追従する面 */
+  }
+
+  html:not(.js) .intro {
+    display: none;
+  }
+
+  /* ストーリーの頂点: キャッチコピーを明朝体で浮かせる（装飾・本文と重複する情報は運ばない） */
+  .intro-copy {
+    position: absolute;
+    inset-inline: 8%;
+    top: 41.5%;
+    margin: 0;
+    text-align: center;
+    font-family: var(--font-mincho);
+    font-size: clamp(1.35rem, 0.9rem + 2.5vw, 2.55rem);
+    font-weight: 600;
+    line-height: 1.6;
+    letter-spacing: 0.09em;
+    color: var(--color-text);
+    text-shadow: var(--shadow-hero-text);
+    opacity: 0;
+    transform: translateY(22px);
+    transition:
+      opacity 0.85s var(--ease-standard),
+      transform 1.05s var(--ease-standard);
+    pointer-events: none;
+  }
+
+  .intro-copy.is-show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .intro-accent {
+    color: var(--color-brand);
+  }
+
+  .intro.is-leaving {
+    /* 最後の一枚を引き抜いて中身を見せる */
+    transition: opacity 0.55s var(--ease-standard), visibility 0s linear 0.55s;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  /* スキップ時は素早く引き抜く */
+  .intro.is-leaving.is-leaving-fast {
+    transition: opacity 0.22s var(--ease-standard), visibility 0s linear 0.22s;
+  }
+
+  .intro.is-done {
+    display: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .intro.is-leaving {
+      transition-duration: 0.3s;
+    }
+
+    .intro-copy {
+      transition: opacity 0.4s var(--ease-standard);
+    }
+  }
+</style>
+
+<script>
+  (function () {
+    const root = document.querySelector('.intro');
+    const canvas = document.querySelector('.intro-canvas');
+    const copy = document.querySelector('.intro-copy');
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function killInstant() {
+      if (root) {
+        root.classList.add('is-done');
+        document.documentElement.classList.remove('intro-lock', 'intro-wait');
+        window.dispatchEvent(new Event('link:intro-done'));
+        if (root.parentNode) root.parentNode.removeChild(root);
+      }
+    }
+
+    // コンポーネント不在・JS描画不可・深くスクロール済みの再読込では発動しない
+    if (!root || !(canvas instanceof HTMLCanvasElement) || !canvas.getContext) return;
+    if (window.scrollY > window.innerHeight * 0.5) {
+      killInstant();
+      return;
+    }
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      killInstant();
+      return;
+    }
+
+    document.documentElement.classList.add('intro-wait', 'intro-lock');
+    // main（z-index:1 のスタッキングコンテキスト）に閉じ込められるとヘッダー(z50)が上に出るため
+    // オーバーレイは body 直下へ移す（描画順の修正・戻し方はこの行とセットで下の <IntroCanvas /> を外す）
+    if (root.parentElement !== document.body) document.body.appendChild(root);
+    root.classList.add('is-running');
+
+    // ---- 画面 -----------------------------------------------------------------
+    const W = window.innerWidth;
+    const H = window.innerHeight;
+    canvas.width = W;
+    canvas.height = H;
+    const cx = W / 2;
+    const cy = H * (H > W ? 0.42 : 0.45);
+    const unit = Math.min(W, H) / 640; // 画面サイズに応じた世界のスケール
+
+    let glowK = document.documentElement.dataset.theme === 'dark' ? 1.45 : 1.05;
+    new MutationObserver(() => {
+      glowK = document.documentElement.dataset.theme === 'dark' ? 1.45 : 1.05;
+    }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+    // ---- 画材 -------------------------------------------------------------------
+    const PAL = ['255, 0, 0', '255, 99, 71', '229, 43, 80', '255, 64, 129'];
+    function sprite(rgb, core) {
+      const size = 96;
+      const c = document.createElement('canvas');
+      c.width = c.height = size;
+      const g = c.getContext('2d');
+      const grad = g.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+      grad.addColorStop(0, typeof core === 'number' ? 'rgba(' + rgb + ',' + core + ')' : 'rgba(' + rgb + ', 0.85)');
+      grad.addColorStop(0.2, 'rgba(' + rgb + ', 0.5)');
+      grad.addColorStop(0.55, 'rgba(' + rgb + ', 0.15)');
+      grad.addColorStop(1, 'rgba(' + rgb + ', 0)');
+      g.fillStyle = grad;
+      g.fillRect(0, 0, size, size);
+      return c;
+    }
+    const SPR = PAL.map((rgb) => sprite(rgb));
+    const RED_CORE = PAL.map((rgb) => sprite(rgb, 0.95)); // 中心の濃い光
+    const WHITE =
+      '255, 245, 243'; // 紙のような白（点・線・面のもと色）
+    const WHITE_CORE = sprite(WHITE, 0.95);
+
+    function drawGlow(x, y, r, tint, a) {
+      const s = r * 2.6;
+      ctx.globalAlpha = Math.max(0, Math.min(1, a));
+      ctx.drawImage(RED_CORE[tint], x - s, y - s, s * 2, s * 2);
+      ctx.globalAlpha = Math.max(0, Math.min(1, a)) * 0.5;
+      ctx.drawImage(SPR[tint], x - s * 2.2, y - s * 2.2, s * 4.4, s * 4.4);
+      ctx.globalAlpha = 1;
+    }
+
+    function drawWhiteGlow(x, y, r, a) {
+      const s = r * 2.6;
+      ctx.globalAlpha = Math.max(0, Math.min(1, a));
+      ctx.drawImage(WHITE_CORE, x - s, y - s, s * 2, s * 2);
+      ctx.globalAlpha = Math.max(0, Math.min(1, a)) * 0.5;
+      ctx.drawImage(SPR[0], x - s * 2.2, y - s * 2.2, s * 4.4, s * 4.4);
+      ctx.globalAlpha = 1;
+    }
+
+    function ink(x1, y1, x2, y2, rgb, a, wCore) {
+      // 細い芯 + 滲んだにじみ（このサイトの線の語法）
+      ctx.lineCap = 'round';
+      ctx.lineWidth = wCore * 2.6;
+      ctx.strokeStyle = 'rgba(' + rgb + ', ' + (a * 0.22).toFixed(3) + ')';
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+      ctx.lineWidth = wCore;
+      ctx.strokeStyle = 'rgba(' + rgb + ', ' + a.toFixed(3) + ')';
+      ctx.stroke();
+    }
+
+    // ---- 絵の具の調色（白→赤へフワッと染める） ------------------------------------
+    const clamp01 = (v) => Math.max(0, Math.min(1, v));
+    function mix(rgbA, rgbB, k) {
+      const a = rgbA.split(',').map(Number);
+      const b = rgbB.split(',').map(Number);
+      return a.map((v, i) => Math.round(v + (b[i] - v) * k)).join(', ');
+    }
+
+    // ---- 世界の構成 ----------------------------------------------------------------
+    // 点は画面の中央。そこから右へ上辺が伸び、時計回りに正方形が描かれる。
+    // 正方形の左上のカドが「点」になる（=点から続き物語にする）。
+    // 縦横比によって正方形の置き所を少しだけ調整する（文句のつきにくい中央寄りに）
+    const rand = (a, b) => a + Math.random() * (b - a);
+    const tint = Math.floor(rand(0, PAL.length)); // 染まり具合の色味は毎回ランダム
+    const S = Math.min(W, H) * 0.3; // 正方形の一辺
+    const J = rand(-0.06, 0.06) * S; // 毎回わずかに構図をずらす（同じ開幕にはならない）
+    const DOT = { x: cx - S * 0.1 + J, y: cy - S * 0.48 + rand(-8, 8) };
+
+    // 気配の揺らぎ（立体的に見せる背面の正方形のオフセット。ゆっくり漂う）
+    const back = {
+      dx: S * (0.3 + 0.05 * rand(-1, 1)),
+      dy: -S * (0.26 + 0.04 * rand(-1, 1)),
+    };
+
+    // ---- 段階の予定時刻（秒。RMではまとめて短縮） ------------------------------------
+    // 落ち着いた総尺: 通常 約8.6秒（入力で即スキップ可）。RM 約2.7秒。
+    const T = reduceMotion
+      ? { dot: 0.12, glow: 0.3, line: 0.3, lineEnd: 0.62, sq: 0.62, sqEnd: 0.98, cube: 0.98, cubeEnd: 1.3, wave: 1.3, waveEnd: 1.62, copy: 1.62, burst: 2.3, end: 2.72 }
+      : { dot: 0.42, glow: 0.95, line: 1.3, lineEnd: 2.42, sq: 2.42, sqEnd: 3.92, cube: 3.92, cubeEnd: 5.32, wave: 5.32, waveEnd: 6.62, copy: 6.62, burst: 7.92, end: 8.62 };
+    const BURST_DUR = T.end - T.burst;
+
+    const ease = {
+      out: (v) => 1 - (1 - v) * (1 - v),
+      io: (v) => v * v * (3 - 2 * v),
+      softOut: (v) => 1 - Math.pow(1 - v, 2.2), // ゆっくり着地する（跳びはねない）
+    };
+
+    // ---- 描画 --------------------------------------------------------------------
+    function mesh() {
+      const gap = Math.round(72 * Math.max(0.75, unit));
+      ctx.strokeStyle = 'rgba(255, 0, 0, 0.04)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (let x = gap; x < W; x += gap) {
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, H);
+      }
+      for (let y = gap; y < H; y += gap) {
+        ctx.moveTo(0, y);
+        ctx.lineTo(W, y);
+      }
+      ctx.stroke();
+    }
+
+    // 正方形の 4 かど（A=点（左上）→ B（右上）→ C（右下）→ D（左下）。時計回り）
+    function corners(t) {
+      const A = { x: DOT.x, y: DOT.y };
+      const B = { x: DOT.x + S * t, y: DOT.y };
+      const C = { x: DOT.x + S, y: DOT.y + S * t };
+      const D = { x: DOT.x + S * (1 - t), y: DOT.y + S };
+      return { A, B, C, D };
+    }
+
+    // 立体（立方体）の 8 頂点: 正方形（前）+ 背面（同型を右上へずらす=引っぱって裏を描く）
+    function cubePoints(t, wob) {
+      const { A, B, C, D } = corners(1);
+      const bx = back.dx + wob.x;
+      const by = back.dy + wob.y;
+      return {
+        A, B, C, D,
+        A2: { x: A.x + bx, y: A.y + by },
+        B2: { x: B.x + bx, y: B.y + by },
+        C2: { x: C.x + bx, y: C.y + by },
+        D2: { x: D.x + bx, y: D.y + by },
+      };
+    }
+
+    function paint(t) {
+      ctx.clearRect(0, 0, W, H);
+      mesh();
+
+      // 開幕が始まったら残像を落としていく
+      const bp = t >= T.burst ? clamp01((t - T.burst) / BURST_DUR) : 0;
+      const fade = 1 - bp;
+
+      // コピーが浮かび始めたら図形を少し退けて文字を立たせる（フワッと）
+      let dim = 1;
+      if (t >= T.copy) dim = 1 - 0.4 * clamp01((t - T.copy) / 0.85);
+
+      // 背面の気配の揺らぎ（ゆっくりした呼吸。全段階で同じ pose を共有する）
+      const wob = reduceMotion
+        ? { x: 0, y: 0 }
+        : { x: Math.sin(t * 0.55) * S * 0.045, y: Math.cos(t * 0.42 + 1.3) * S * 0.04 };
+
+      // ---- 1) 白い点 -------------------------------------------------------------
+      if (t >= T.dot && fade > 0.01) {
+        const a = clamp01((t - T.dot) / 0.55); // ゆっくり浮かぶ
+        drawWhiteGlow(DOT.x, DOT.y, 5.2 * unit + 2, a * 0.95 * glowK * fade);
+      }
+
+      // ---- 2) 点が赤く光る ---------------------------------------------------------
+      if (t >= T.glow && fade > 0.01) {
+        const g = clamp01((t - T.glow) / 0.62);
+        drawGlow(DOT.x, DOT.y, 4.6 * unit + 2, tint, g * 0.9 * glowK * fade);
+        drawWhiteGlow(DOT.x, DOT.y, 4.2 * unit + 2, (1 - g * 0.35) * 0.9 * dim * fade);
+      }
+
+      // ---- 3) 線が右へ -------------------------------------------------------------
+      if (t >= T.line && fade > 0.01) {
+        const lp = clamp01((t - T.line) / (T.lineEnd - T.line));
+        const grown = ease.softOut(lp);
+        ink(DOT.x, DOT.y, DOT.x + S * grown, DOT.y, mix(WHITE, PAL[tint], 0.15), 0.78 * glowK * dim * fade, 2);
+        if (lp > 0.9) drawWhiteGlow(DOT.x + S, DOT.y, 3.8 * unit + 2, ((lp - 0.9) / 0.1) * 0.85 * glowK * dim * fade);
+      }
+
+      // ---- 4) 時計回りに白い正方形 ---------------------------------------------------
+      if (t >= T.sq && fade > 0.01) {
+        const sq = clamp01((t - T.sq) / (T.sqEnd - T.sq));
+        // 3辺（B→C, C→D, D→A）を順番にゆっくり描く。1辺あたり 0.3
+        for (let i = 0; i < 3; i++) {
+          const seg = clamp01((sq - i * 0.3) / 0.3);
+          if (seg <= 0) break;
+          const len = S * seg;
+          if (i === 0) ink(DOT.x + S, DOT.y, DOT.x + S, DOT.y + len, mix(WHITE, PAL[tint], 0.15), 0.78 * glowK * dim * fade, 2);
+          if (i === 1) ink(DOT.x + S, DOT.y + S, DOT.x + S - len, DOT.y + S, mix(WHITE, PAL[tint], 0.15), 0.78 * glowK * dim * fade, 2);
+          if (i === 2) {
+            ink(DOT.x, DOT.y + S, DOT.x, DOT.y + S - len, mix(WHITE, PAL[tint], 0.15), 0.78 * glowK * dim * fade, 2);
+            if (seg > 0.95) drawWhiteGlow(DOT.x, DOT.y, 4 * unit + 2, 0.9 * glowK * dim * fade); // 起点と閉じる
+          }
+        }
+      }
+
+      // ---- 5) 面が立体になる（背面が育つ） ------------------------------------------
+      if (t >= T.cube && fade > 0.01) {
+        const cp = clamp01((t - T.cube) / (T.cubeEnd - T.cube));
+        const gr = ease.io(cp);
+        const grow = { x: back.dx * gr, y: back.dy * gr };
+        const a = 0.6 + 0.4 * gr;
+        const P = cubePoints(1, { x: grow.x + wob.x * gr, y: grow.y + wob.y * gr });
+
+        // 背面の正方形（奥。淡い）
+        const pale = mix(WHITE, PAL[tint], 0.25);
+        ink(P.A2.x, P.A2.y, P.B2.x, P.B2.y, pale, 0.5 * a * glowK * dim * fade, 1.6);
+        ink(P.B2.x, P.B2.y, P.C2.x, P.C2.y, pale, 0.5 * a * glowK * dim * fade, 1.6);
+        ink(P.C2.x, P.C2.y, P.D2.x, P.D2.y, pale, 0.5 * a * glowK * dim * fade, 1.6);
+        ink(P.D2.x, P.D2.y, P.A2.x, P.A2.y, pale, 0.5 * a * glowK * dim * fade, 1.6);
+        for (const q of [P.A2, P.B2, P.C2, P.D2]) drawWhiteGlow(q.x, q.y, 3 * unit + 2, (0.4 * a * glowK * dim * fade) * (t < T.wave ? 1 : 0.45));
+
+        // 結びの 4 本（奥行きの稜線）
+        for (const pair of [[P.A, P.A2], [P.B, P.B2], [P.C, P.C2], [P.D, P.D2]]) {
+          ink(pair[0].x, pair[0].y, pair[1].x, pair[1].y, pale, 0.5 * a * glowK * dim * fade, 1.4);
+        }
+      }
+
+      // ---- 6) 赤く染まる（点→線→面の順でフワッと） -----------------------------------
+      if (t >= T.wave && fade > 0.01) {
+        const wp = clamp01((t - T.wave) / (T.waveEnd - T.wave));
+        const P = cubePoints(1, wob);
+        const pulse = reduceMotion ? 1 : 0.88 + Math.sin(t * 1.7) * 0.12;
+
+        // 赤く染まった面（前面・上・右）
+        const K = ease.io(wp);
+        const bodyRGB = mix(WHITE, PAL[tint], K);
+        // 側面（上: A-B-B2-A2、右: B-C-C2-B2。背面が右上にあるため見える）
+        ctx.fillStyle = 'rgba(' + bodyRGB + ', ' + (0.1 * glowK * pulse * dim * fade).toFixed(3) + ')';
+        for (const face of [[P.A, P.B, P.B2, P.A2], [P.B, P.C, P.C2, P.B2]]) {
+          ctx.beginPath();
+          ctx.moveTo(face[0].x, face[0].y);
+          for (let i = 1; i < 4; i++) ctx.lineTo(face[i].x, face[i].y);
+          ctx.closePath();
+          ctx.fill();
+        }
+        // 前面
+        ctx.fillStyle = 'rgba(' + bodyRGB + ', ' + (0.16 * glowK * pulse * dim * fade).toFixed(3) + ')';
+        ctx.beginPath();
+        ctx.moveTo(P.A.x, P.A.y);
+        ctx.lineTo(P.B.x, P.B.y);
+        ctx.lineTo(P.C.x, P.C.y);
+        ctx.lineTo(P.D.x, P.D.y);
+        ctx.closePath();
+        ctx.fill();
+
+        // 点がいちばん先に強く光る（wave 前 0.35 秒）
+        const dotFlash = clamp01((t - T.wave) / 0.35);
+        drawGlow(DOT.x, DOT.y, 5 * unit + 2, tint, Math.min(1.05, 0.7 + dotFlash * 0.35) * glowK * dim * fade);
+
+        // 稜線（前面を濃く、奥を淡く）
+        for (const [p, q, aBase] of [
+          [P.A, P.B, 0.8], [P.B, P.C, 0.8], [P.C, P.D, 0.8], [P.D, P.A, 0.8],
+          [P.A2, P.B2, 0.4], [P.B2, P.C2, 0.4], [P.C2, P.D2, 0.4], [P.D2, P.A2, 0.4],
+          [P.A, P.A2, 0.55], [P.B, P.B2, 0.55], [P.C, P.C2, 0.55], [P.D, P.D2, 0.55],
+        ]) {
+          ink(p.x, p.y, q.x, q.y, bodyRGB, aBase * 0.95 * glowK * pulse * dim * fade, 2);
+        }
+        // 8つの頂点の光
+        const vr = tint;
+        for (const q of [P.A, P.B, P.C, P.D, P.A2, P.B2, P.C2, P.D2]) {
+          drawGlow(q.x, q.y, 3.4 * unit + 2, vr, 0.75 * glowK * dim * fade);
+        }
+      }
+
+      // ---- 7) バーン（粒子がはじけてフラッシュで面が引ける） --------------------------
+      if (t >= T.burst) {
+        const d = ease.out(bp) * unit * (W * 0.6);
+        const bx = DOT.x + S * 0.5;
+        const by = DOT.y + S * 0.5;
+        for (let i = 0; i < 15; i++) {
+          const a = (i / 15) * Math.PI * 2;
+          drawGlow(bx + Math.cos(a) * d, by + Math.sin(a) * d * 0.88, 4.6 * unit + 2, i % PAL.length, (1 - bp) * 0.85 * glowK);
+        }
+        if (bp < 0.5) {
+          // 芯のフラッシュ（面が白く燃え上がってから裂ける）
+          ctx.fillStyle = 'rgba(255, 240, 238, ' + ((1 - bp * 2) * 0.82).toFixed(3) + ')';
+          ctx.fillRect(0, 0, W, H);
+        }
+      }
+    }
+
+    // ---- 進行 ---------------------------------------------------------------------
+    let started = 0;
+    let done = false;
+    let rafId = 0;
+
+    function frame(now) {
+      if (done) return;
+      // 読み込み後にこちらの意思と無関係に深い位置へ戻された（復元/アンカー直行）場合は開幕をやめる
+      if (window.scrollY > window.innerHeight * 0.5) {
+        killInstant();
+        return;
+      }
+      if (!started) started = now;
+      const t = (now - started) / 1000;
+      if (copy && t >= T.copy && !copy.classList.contains('is-show')) copy.classList.add('is-show');
+      paint(t);
+      if (t >= T.end) {
+        finish(false);
+        return;
+      }
+      rafId = requestAnimationFrame(frame);
+    }
+
+    function finish(skipped) {
+      if (done) return;
+      done = true;
+      cancelAnimationFrame(rafId);
+      document.documentElement.classList.remove('intro-lock', 'intro-wait');
+      root.classList.add('is-leaving');
+      if (skipped) root.classList.add('is-leaving-fast');
+      window.dispatchEvent(new Event('link:intro-done'));
+      window.setTimeout(() => {
+        root.classList.add('is-done');
+        if (root.parentNode) root.parentNode.removeChild(root);
+      }, skipped ? 300 : 850);
+    }
+
+    function skip() {
+      finish(true);
+    }
+
+    // どんな入力でもスキップ（スクロール/タッチ/キー/クリック）
+    window.addEventListener('wheel', skip, { passive: true, once: true });
+    window.addEventListener('touchstart', skip, { passive: true, once: true });
+    window.addEventListener('click', skip, { once: true });
+    window.addEventListener('keydown', skip, { once: true });
+    // 保険: 終端の直後で必ず閉じる
+    window.setTimeout(() => finish(false), T.end * 1000 + 500);
+
+    started = 0;
+    rafId = requestAnimationFrame(frame);
+  })();
+</script>

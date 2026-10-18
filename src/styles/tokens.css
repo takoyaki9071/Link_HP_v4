@@ -1,0 +1,212 @@
+/* デザイントークン — 単一の定義場所（docs/デザインシステム.md / docs/ホーム設計プラン.md §4）。
+   ブランド値は V1 CSS・要件書由来。派生色は役割と根拠を明記し、コントラスト検証結果は点検記録に残す。 */
+:root {
+  /* ブランド */
+  --color-brand: #ff0000;          /* ロゴ・装飾の赤。小さな文字には使わない（白面で約4.0:1） */
+  --color-brand-strong: #c40000;   /* 文字を載せる赤面・リンク文字（派生色。白との比 約6.2:1） */
+  --color-brand-deep: #a30000;     /* hover 等の一歩深い赤（派生色） */
+  /* 連絡先まわり（メール・フォーム行）のリンク色 — 濃い赤ではなくピンク寄りの赤にする
+     （関係者指示 2026-10-18。白面で約5.9:1 / hover で約7.9:1・AA以上） */
+  --color-contact-link: #c2185b;
+  --color-contact-link-strong: #a01147;
+  --color-accent: #ff4d4f;         /* 注目表示・装飾限定 */
+
+  /* 文字と面 */
+  --color-text: #333333;
+  --color-muted: #595959;          /* 補助文字（白面で 7.0:1） */
+  --color-background: #ffffff;
+  --color-surface-muted: #f5f5f5;
+  --color-border: #d9d9d9;
+
+  /* レイアウト */
+  --content-width: 1200px;
+  --page-gutter: 24px;
+  --radius-card: 12px;   /* 2026-10-18: 8px→12px。柔らかく優しい印象へ */
+  --radius-btn: 6px;
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-hero-text: 0 1px 2px rgb(90 10 10 / 0.16), 0 0 22px rgb(255 245 243 / 0.92); /* ヒーロー題字のうすい落ち影（滲み越しの可読性・2026-10-18） */
+
+  /* 書体 — V1のシステムフォントスタックWebフォント不使用 */
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, "Noto Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo",
+    sans-serif;
+  /* 明朝系（開幕演出の題字・沿革の日付に使用。システム書体のみ・Webフォント不使用） */
+  --font-mincho: "Hiragino Mincho ProN", "Hiragino Mincho", "Yu Mincho", "YuMincho", "Noto Serif JP", serif;
+
+  /* タイプスケール — 見出し/本文/補助の3段階。日本語本文16px以上を維持 */
+  --fs-hero: clamp(3rem, 1.8rem + 6.4vw, 6rem);
+  --fs-h2: clamp(1.625rem, 1.25rem + 1.6vw, 2.125rem);
+  --fs-h3: 1.125rem;
+  --fs-lead: clamp(1.0625rem, 1.02rem + 0.25vw, 1.1875rem);
+  --fs-body: 1rem;
+  --fs-small: 0.9375rem;
+  --fs-caption: 0.8125rem;
+
+  /* 余白 — 8px基準。セクション〜部品まで段階的に使用 */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --section-pad: clamp(56px, 9vw, 96px);
+  --header-height: 64px;
+
+  /* 影 — hover時の浮き表現。ボタン・カードで共通使用 */
+  --shadow-lift: 0 6px 16px rgba(0, 0, 0, 0.13);
+
+  /* ダークモード用の役割トークン（ライト既定値。dark 版は下で上書き） */
+  /* 「赤の面に載せる文字」の色（ライト=#ffffff / ダーク=面と同じ黒） */
+  --color-on-inverse: #ffffff;
+  /* 赤の面そのもの（ボタン・公開中チップ・「重要」バッジの背景。文字用の赤とは別に管理） */
+  --color-btn-primary-bg: var(--color-brand-strong);
+  --color-btn-primary-bg-hover: var(--color-brand-deep);
+  /* ヘッダーの半透明面（backdrop-filter と併用） */
+  --color-header-bg: rgb(255 255 255 / 0.72);
+
+  /* 装飾の赤光 — ヒーローの滲み・模様・細線円。ライトとダークで濃さだけ替える
+     （pages.css はこのトークンを参照するため、色切替はトークン一箇所で完結する） */
+  /* ホワイトでも「締まり」を持たせるため、ライト側の赤光は 2026-10-18 にやや濃くした */
+  --deco-wash: rgb(255 0 0 / 0.14);    /* 滲み（hero::before・blob・セクションの霞） */
+  --deco-ring: rgb(255 0 0 / 0.22);    /* 細線円 */
+  --deco-dot: rgb(255 0 0 / 0.13);     /* ヒーローのドット模様 */
+  --deco-stripe: rgb(255 0 0 / 0.09);  /* ヒーローの斜線模様・紙グリッド */
+  --deco-dot-alt: rgb(255 0 0 / 0.045); /* グレー面の超淡いドット模様 */
+  --deco-spine: rgb(255 0 0 / 0.16);   /* 縦書きゴースト字（背表紙・ランダム文字） */
+  --deco-star: rgb(255 0 0 / 0.15);    /* セクション面の小さな星屑 */
+  --deco-glow: rgb(255 0 0 / 0.35);    /* ナビのhoverのぼんやり光（赤い落影） */
+  /* ナビのグロー帯の位置 — ライトでは文字の真下に寄せる（ダークは現状の見え方を維持。2026-10-18） */
+  --nav-glow-bottom: 8px;
+  --nav-glow-shadow: 0 3px 10px 1px var(--deco-glow);
+
+  /* セクション面のベール（WorldCanvas を透す半透明の下地）。
+     ライトは白のベール、ダークは**真っ黒になりすぎない**ためにわずかに持ち上げた黒 */
+  --veil-page-a: rgb(255 255 255 / 0.88);  /* 白面の上端 */
+  --veil-page-b: rgb(255 255 255 / 0.60);  /* 白面の下端（下ほど世界が透ける） */
+  --veil-alt: rgb(247 246 246 / 0.86);     /* グレー面 */
+
+  /* 動き — 控えめに。prefers-reduced-motion は各所で無効化 */
+  --ease-standard: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 200ms;
+  --duration-reveal: 500ms;
+  --reveal-distance: 16px;
+}
+
+/* フォーム部品・スクロールバーは OS の外観設定に合わせる（ダークモード対応） */
+:root {
+  color-scheme: light dark;
+}
+
+/* ---------- ダークモード ---------- */
+/* 切替経路は2つ:
+   (A) :root[data-theme="dark"]  — ヘッダーのトグル／head の初期化スクリプトが付与（通常経路）
+   (B) media フォールバック — JS 無効環境でも OS=ダーク ならダークにする（data-theme="light" で任意解除）
+   ※ 2ブロックの内容は必ず同じに保つこと（色の調整は両方へ同時反映）。
+   背景はかなり深い黒（#0b0b0b・関係者指示「もっとブラックでよい」2026-10-18）。
+   コントラスト検証（2026-10-18・暗面 #0b0b0b 基準）:
+   - 文字   #ece7e7 ≒ 14:1 / 補助  #b0a6a6 ≒ 8.7:1 / リンク #ff6b6b ≒ 7.1:1（いずれもAA以上）
+   - 赤面ボタン #c40000＋白文字 ≒ 6.2:1（ライトと同じ赤面を維持） */
+:root[data-theme="dark"] {
+  /* ブランド */
+  --color-brand: #ff0000;         /* 装飾・大型表示は同じ赤（暗面で約4.9:1・大文字AA以上） */
+  --color-brand-strong: #ff6b6b;  /* 文字・リンク用の赤は暗面で読める明るさへ再定義 */
+  --color-brand-deep: #ff8989;    /* hover は暗面では一歩「明るく」が“深い”方向に相当 */
+  --color-contact-link: #ff6b6b;          /* 連絡先まわりのリンク（ダークは現状のピンク系を維持） */
+  --color-contact-link-strong: #ff8989;
+  --color-accent: #ff8080;
+
+  /* 文字と面 */
+  --color-text: #ece7e7;
+  --color-muted: #b0a6a6;
+  --color-background: #0b0b0b;
+  --color-surface-muted: #161414;
+  --color-border: #2e2b2b;
+
+  /* 影は暗面では深く、視差として効かせる */
+  --shadow-card: 0 1px 3px rgb(0 0 0 / 0.5);
+  --shadow-lift: 0 6px 16px rgb(0 0 0 / 0.6);
+  --shadow-hero-text: 0 2px 6px rgb(0 0 0 / 0.6), 0 0 18px rgb(255 107 107 / 0.22);
+
+  /* 役割トークンの差し替え */
+  --color-on-inverse: #0b0b0b;
+  --color-btn-primary-bg: #c40000;       /* 白文字との比 約6.2:1 */
+  --color-btn-primary-bg-hover: #a30000;
+  --color-header-bg: rgb(11 11 11 / 0.62);
+
+  /* 装飾の赤光はダークで濃く光らせる */
+  --deco-wash: rgb(255 32 32 / 0.20);
+  --deco-ring: rgb(255 96 96 / 0.32);
+  --deco-dot: rgb(255 96 96 / 0.22);
+  --deco-stripe: rgb(255 96 96 / 0.14);
+  --deco-dot-alt: rgb(255 96 96 / 0.07);
+  --deco-spine: rgb(255 96 96 / 0.26);
+  --deco-star: rgb(255 120 120 / 0.30);
+  --deco-glow: rgb(255 96 96 / 0.55);
+  --nav-glow-bottom: 1px;
+  --nav-glow-shadow: 0 6px 16px 2px var(--deco-glow);
+
+  /* セクション面のベール（ダーク）: #0b0b0b の純黒面を「ガチガチにイカツクならない」
+     ようにわずかに持ち上げ、WorldCanvas の光が透して面が浮くようにする
+     （関係者指示「02と04が濃すぎる・もう少し工夫」） */
+  --veil-page-a: rgb(26 23 23 / 0.86);
+  --veil-page-b: rgb(22 19 19 / 0.58);
+  --veil-alt: rgb(30 27 27 / 0.82);
+
+  color-scheme: dark;
+}
+
+/* 手動でライト指定したときはフォーム部品・スクロールバーもライトに固定する */
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) {
+    /* ブランド */
+    --color-brand: #ff0000;
+    --color-brand-strong: #ff6b6b;
+    --color-brand-deep: #ff8989;
+    --color-contact-link: #ff6b6b;
+    --color-contact-link-strong: #ff8989;
+    --color-accent: #ff8080;
+
+    /* 文字と面 */
+    --color-text: #ece7e7;
+    --color-muted: #b0a6a6;
+    --color-background: #0b0b0b;
+    --color-surface-muted: #161414;
+    --color-border: #2e2b2b;
+
+    /* 影は暗面では深く、視差として効かせる */
+    --shadow-card: 0 1px 3px rgb(0 0 0 / 0.5);
+    --shadow-lift: 0 6px 16px rgb(0 0 0 / 0.6);
+    --shadow-hero-text: 0 2px 6px rgb(0 0 0 / 0.6), 0 0 18px rgb(255 107 107 / 0.22);
+
+    /* 役割トークンの差し替え */
+    --color-on-inverse: #0b0b0b;
+    --color-btn-primary-bg: #c40000;
+    --color-btn-primary-bg-hover: #a30000;
+    --color-header-bg: rgb(11 11 11 / 0.62);
+
+    /* 装飾の赤光はダークで濃く光らせる */
+    --deco-wash: rgb(255 32 32 / 0.20);
+    --deco-ring: rgb(255 96 96 / 0.32);
+    --deco-dot: rgb(255 96 96 / 0.22);
+    --deco-stripe: rgb(255 96 96 / 0.14);
+    --deco-dot-alt: rgb(255 96 96 / 0.07);
+    --deco-spine: rgb(255 96 96 / 0.26);
+    --deco-star: rgb(255 120 120 / 0.30);
+    --deco-glow: rgb(255 96 96 / 0.55);
+    --nav-glow-bottom: 1px;
+    --nav-glow-shadow: 0 6px 16px 2px var(--deco-glow);
+
+    /* セクション面のベール（ダーク）— data-theme 版と必ず同じ値にする */
+    --veil-page-a: rgb(26 23 23 / 0.86);
+    --veil-page-b: rgb(22 19 19 / 0.58);
+    --veil-alt: rgb(30 27 27 / 0.82);
+
+    color-scheme: dark;
+  }
+}

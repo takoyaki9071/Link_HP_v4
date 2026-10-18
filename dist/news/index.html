@@ -1,0 +1,59 @@
+<!DOCTYPE html><html lang="ja"> <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>お知らせ - Link 公式ホームページ</title><meta name="description" content="Linkの活動報告や参加案内などのお知らせを掲載するページです。"><meta property="og:title" content="お知らせ - Link 公式ホームページ"><meta property="og:description" content="Linkの活動報告や参加案内などのお知らせを掲載するページです。"><meta property="og:type" content="website"><meta property="og:site_name" content="Link"><meta property="og:image" content="/ogp.png"><meta name="twitter:card" content="summary_large_image"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><!-- ブラウザUI（アドレスバー等）の色。ダーク指定時は下のスクリプトが差し替える --><meta name="theme-color" content="#ffffff"><!-- 表示モードの初期化（描写前に行って切り替えのちらつきを防ぐ）:
+         1) localStorage の手動選択（ヘッダーのトグル）が最優先
+         2) 未選択なら OS の prefers-color-scheme に追従（OS 変化も追従）
+         JS 無効環境では以降のメディアクエリ（tokens.css）がそのまま効く --><script>
+      (function () {
+        var root = document.documentElement;
+        var saved = null;
+        try {
+          saved = localStorage.getItem('link-theme');
+        } catch (e) {}
+        if (saved === 'dark' || saved === 'light') {
+          root.dataset.theme = saved;
+        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          root.dataset.theme = 'dark';
+        }
+        // 手動選択がされた後は保存値が優先（localStorage を見て追従をやめる）
+        var mq = window.matchMedia('(prefers-color-scheme: dark)');
+        var onSys = function (event) {
+          var s = null;
+          try {
+            s = localStorage.getItem('link-theme');
+          } catch (e) {}
+          if (s === 'dark' || s === 'light') return;
+          root.dataset.theme = event.matches ? 'dark' : 'light';
+        };
+        if (typeof mq.addEventListener === 'function') {
+          mq.addEventListener('change', onSys);
+        }
+      })();
+      // meta theme-color を現在のモードに合わせる（トグル・OS 変化の両方に追従）
+      (function () {
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (!meta) return;
+        var apply = function () {
+          meta.setAttribute('content',
+            document.documentElement.dataset.theme === 'dark' ? '#0b0b0b' : '#ffffff');
+        };
+        apply();
+        new MutationObserver(apply).observe(document.documentElement, {
+          attributes: true,
+          attributeFilter: ['data-theme'],
+        });
+      })();
+    </script><!-- JS 有効判定（.reveal の CSS は html.js 配下でのみ非表示になる。JS無効環境では常時表示） --><script>document.documentElement.classList.add('js');</script><link rel="stylesheet" href="/_astro/about.BxGGgpyO.css"></head> <body> <a class="skip-link" href="#main">本文へスキップ</a> <header class="site-header"> <div class="container header-inner"> <a class="brand" href="/" aria-label="Link ホーム（トップへ）"> <!-- TODO(確認事項#5): ロゴの公式種別（Pre/Sec）確定後に差し替え。
+           黒/白2種を重ね、表示モードに応じて CSS で切替え（details は components.css）。
+           html[data-theme] 由来のため描写前に確定し、切替のちらつきも出ない --> <img class="brand-logo" data-variant="light" src="/logo-black.svg" alt="Link" width="88" height="30"> <img class="brand-logo" data-variant="dark" src="/logo-white.svg" alt="" width="88" height="30" aria-hidden="true"> </a> <!-- 下層ページからでも共通で動くよう、サイトルート基準のリンクにしている。
+         お問い合わせはCTAボタンのみ（導線の重複を避ける・2026-10-18 関係者指示） --> <nav id="site-nav" class="site-nav" aria-label="サイト内メニュー"> <ul> <li><a href="/#about">概要</a></li> <li><a href="/about">団体紹介</a></li> <li><a href="/activity">活動</a></li> <li><a href="/news">お知らせ</a></li> </ul> <a class="btn btn-primary nav-cta" href="/#contact">お問い合わせ</a> </nav> <!-- 表示モード切替（ライト⇄ダーク）。選択は localStorage に保存し、未選択の間は OS 設定に追従。
+         アイコン: 月=ダークへ切り替え / 太陽=ライトへ切り替え の意 --> <button id="theme-btn" class="theme-btn" type="button" aria-label="ダークモードに切り替え"> <svg class="theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"> <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"></path> </svg> <svg class="theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"> <circle cx="12" cy="12" r="4"></circle> <path d="M12 2v2"></path> <path d="M12 20v2"></path> <path d="m4.93 4.93 1.41 1.41"></path> <path d="m17.66 17.66 1.41 1.41"></path> <path d="M2 12h2"></path> <path d="M20 12h2"></path> <path d="m6.34 17.66-1.41 1.41"></path> <path d="m19.07 4.93-1.41 1.41"></path> </svg> </button> <button id="menu-btn" class="menu-btn" aria-expanded="false" aria-controls="site-nav"> <span class="visually-hidden">メニューを開閉</span> <span class="menu-btn-bar" aria-hidden="true"></span> <span class="menu-btn-bar" aria-hidden="true"></span> <span class="menu-btn-bar" aria-hidden="true"></span> </button> </div> </header> <script type="module">const n=document.getElementById("menu-btn"),c=document.getElementById("site-nav"),s=document.getElementById("theme-btn");if(n instanceof HTMLElement&&c instanceof HTMLElement){const e=t=>{n.setAttribute("aria-expanded",String(t)),c.classList.toggle("open",t),n.classList.toggle("is-open",t)};n.addEventListener("click",()=>{e(n.getAttribute("aria-expanded")!=="true")}),c.addEventListener("click",t=>{t.target instanceof Element&&t.target.closest("a")&&e(!1)}),document.addEventListener("keydown",t=>{t.key==="Escape"&&n.getAttribute("aria-expanded")==="true"&&(e(!1),n.focus())})}if(s instanceof HTMLElement){const e=document.documentElement,t=()=>{const a=e.dataset.theme==="dark";s.classList.toggle("is-dark",a),s.setAttribute("aria-label",a?"ライトモードに切り替え":"ダークモードに切り替え")};t(),s.addEventListener("click",()=>{const a=e.dataset.theme==="dark"?"light":"dark";e.dataset.theme=a;try{localStorage.setItem("link-theme",a)}catch{}t()})}</script> <!-- ページ全体の世界 Canvas: 本文（main z-index:1）の下に多様な図形（立体/真球/長い線/点）を
+         敷く。外せば元に戻る（WorldCanvas.astro のヘッダーコメント参照） --> <canvas class="world-canvas" aria-hidden="true"></canvas>  <script type="module" src="/_astro/WorldCanvas.astro_astro_type_script_index_0_lang.Dh0gST2z.js"></script> <main id="main">  <section class="page-hero" aria-labelledby="page-title"> <div class="container"> <p class="page-hero-eyebrow">News</p> <h1 class="page-hero-title" id="page-title">お知らせ</h1> <p class="page-hero-lead">Linkの活動報告や参加案内などをお知らせします。新しいものから順に掲載します。</p> </div> </section> <section class="section"> <div class="container"> <header class="section-head reveal"> <p class="section-eyebrow"> <span class="section-index">01</span> <span>Index</span> </p> <h2 class="section-title" id="news-all-title">お知らせ一覧</h2> <span class="section-bar" aria-hidden="true"></span> <span class="section-ghost" aria-hidden="true">01</span> </header> <p class="news-empty">
+現在、公開中のお知らせはありません。
+<span class="visually-hidden">
+（追加は src/content/news へ markdown を追加して反映します。docs/更新手順.md 参照）
+</span> </p> <p class="news-back"> <a class="btn btn-ghost" href="/">
+ホームへ戻る<span class="btn-arrow" aria-hidden="true">→</span> </a> </p> </div> </section>  </main> <footer class="site-footer"> <div class="container footer-grid"> <!-- ブランド部: キャッチ+団体の要点（トップ以外に来た人向けの最短要約） --> <div class="footer-brandcol"> <p class="footer-brand">Link<span class="footer-brand-dot" aria-hidden="true">.</span></p> <p class="footer-catch">すべての人の、はじまりをLinkする。</p> <!-- TODO(更新時): 団体説明の運用更新時は about.json hero を差し替え（ answers/01 反映済み） --> <p class="footer-desc">若者が自身の原体験を基に運営する学生団体です。大阪・寝屋川を拠点に、学生と社会を“繋げる”活動を通じて、すべての人の“はじまり”をつくります。</p> <!-- メールはビジョンブック2026 p23 の hello@linklabo.jp（2026-10-18 反映） --> <p class="footer-contactline">
+お問い合わせ: <span class="footer-contact-addr">hello@linklabo.jp</span> <a class="footer-formlink" href="https://forms.gle/68tDvexQjWrbMFvv9" target="_blank" rel="noopener noreferrer"> フォームを開く↗
+</a> </p> </div> <!-- サイトマップ: 公開済みページ（ヘッダーより多くの導線を持つ） --> <nav class="footer-nav" aria-label="サイトマップ"> <p class="footer-coltitle">サイトマップ</p> <ul> <li><a href="/">ホーム</a></li> <li><a href="/about">団体紹介</a></li> <li><a href="/activity">活動</a></li> <li><a href="/news">お知らせ</a></li> <li><a href="/#contact">お問い合わせ</a></li> </ul> </nav> <!-- これから作るページ（第2期予定）。存在することが見える形で「準備中」と明示する --> <!-- TODO(第2期): 各ページを実装したら span を a リンクに差し替える --> <nav class="footer-nav" aria-label="今後追加するページ"> <p class="footer-coltitle">今後のページ<span class="footer-soonnote">準備中</span></p> <ul> <li><span class="footer-soon" aria-disabled="true">活動の記録・実績</span></li> <li><span class="footer-soon" aria-disabled="true">参加のしかた</span></li> <li><span class="footer-soon" aria-disabled="true">よくあるご質問</span></li> <li><span class="footer-soon" aria-disabled="true">運営メンバー紹介</span></li> </ul> </nav> </div> <div class="container footer-bottom"> <p class="footer-copy">&copy; 2026 Link</p> <!-- TODO(確認事項#6): ドメイン確定後に正式URLをここに補う --> <p class="footer-note">学生団体 Link — 大阪府寝屋川市（寝屋川市立市民活動センター内）</p> </div> </footer> <!-- 控えめなスクロール演出（2026-10-18 承認）:
+         .reveal を表示1度きりフェードアップ。reduced-motion では即時全表示。
+         主要情報を長く隠さないため遅延は最大240ms・ホーム設計プラン §4 の改定を参照。
+         なお html.intro-wait がある間（開幕演出中）は開幕の発表まで待ってから始める。 --> <script type="module">const o=document.querySelectorAll(".reveal"),i=window.matchMedia("(prefers-reduced-motion: reduce)").matches,c=()=>{o.forEach(e=>e.classList.add("is-visible"))};let r=!1;function n(){if(!r)if(r=!0,i||!("IntersectionObserver"in window))c();else{const e=new IntersectionObserver(t=>{for(const s of t)s.isIntersecting&&(s.target.classList.add("is-visible"),e.unobserve(s.target))},{threshold:.15,rootMargin:"0px 0px -40px 0px"});o.forEach(t=>e.observe(t))}}document.documentElement.classList.contains("intro-wait")?(window.addEventListener("link:intro-done",n,{once:!0}),window.setTimeout(n,4600)):n();</script> </body> </html>

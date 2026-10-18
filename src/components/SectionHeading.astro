@@ -1,0 +1,24 @@
+---
+interface Props {
+  /** h2 に付与する id。section の aria-labelledby から参照する */
+  title: string;
+  id?: string;
+  eyebrow?: string;
+  /** セクション番号（例: "01"）。指定すると赤番号 + 斜線を eyebrow の左に添える */
+  index?: string;
+}
+
+const { title, id, eyebrow, index } = Astro.props;
+---
+
+<header class="section-head reveal">
+  {eyebrow && (
+    <p class="section-eyebrow">
+      {index && <span class="section-index">{index}</span>}
+      <span>{eyebrow}</span>
+    </p>
+  )}
+  <h2 class="section-title" id={id}>{title}</h2>
+  <span class="section-bar" aria-hidden="true"></span>
+  {index && <span class="section-ghost" aria-hidden="true">{index}</span>}
+</header>

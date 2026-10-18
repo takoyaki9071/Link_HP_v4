@@ -1,0 +1,38 @@
+---
+import { getCollection } from 'astro:content';
+import { dateOf, formatDate, isoDate, sortByDateDesc, articleId, type NewsEntry } from '../lib/news';
+
+// ホームのお知らせ: **タイトル+日付のみのリンク行・最大5件**。
+// 本文・写真は /news 専用ページで読む（関係者指示 2026-10-18）。
+const items: NewsEntry[] = sortByDateDesc(await getCollection('news')).slice(0, 5);
+---
+
+{
+  items.length === 0 ? (
+    <p class="news-empty">
+      現在、公開中のお知らせはありません。
+      <span class="visually-hidden">
+        （追加は src/content/news へ markdown を追加して反映します。docs/更新手順.md 参照）
+      </span>
+    </p>
+  ) : (
+    <ul class="news-list">
+      {items.map((item) => {
+        const date = dateOf(item);
+        return (
+          <li class="news-row">
+            <a class="news-link" href={`/news#${articleId(item)}`}>
+              <time class="news-date" datetime={isoDate(date)}>
+                {date ? formatDate(date) : '日付未設定'}
+              </time>
+              <span class="news-title">{item.data.title}</span>
+              <span class="news-more" aria-hidden="true">
+                →
+              </span>
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+  )
+}

@@ -1,0 +1,103 @@
+/* body・リンク・共通要素 */
+html {
+  font-family: var(--font-sans);
+  color: var(--color-text);
+  background: var(--color-background);
+}
+
+.container {
+  width: 100%;
+  max-width: var(--content-width);
+  margin-inline: auto;
+  padding-inline: var(--page-gutter);
+}
+
+a {
+  color: var(--color-brand-strong);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  color: var(--color-brand-deep);
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-brand-strong);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* 目次ジャンプ用リンク */
+.skip-link {
+  position: absolute;
+  top: -56px;
+  left: var(--page-gutter);
+  z-index: 100;
+  padding: 10px 14px;
+  background: var(--color-text);
+  color: var(--color-on-inverse);
+  font-weight: 600;
+  border-radius: 0 0 var(--radius-btn) var(--radius-btn);
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- スムーススクロール・アンカー位置合わせ ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* 本文を世界 Canvas の上の層に固定する（WorldCanvas は z-index:0 の fixed 背景）。
+   セクションは半透明のベール（--veil-*）なので、世界が透けて見える */
+main#main {
+  position: relative;
+  z-index: 1;
+}
+
+/* stickyヘッダーに見出しが隠れないよう、リンク先へ余白を確保 */
+main [id] {
+  scroll-margin-top: calc(var(--header-height) + 20px);
+}
+
+/* ---------- 控えめなスクロール演出（2026-10-18 承認） ---------- */
+/* JS有効時（html.js）だけ .reveal を非表示からフェードアップ。表示は1度きり。
+   主要情報を長時間隠さない: 遅延は最大 240ms、prefers-reduced-motion では無効。 */
+html.js .reveal {
+  opacity: 0;
+  transform: translateY(var(--reveal-distance));
+  transition:
+    opacity var(--duration-reveal) var(--ease-standard) var(--reveal-delay, 0ms),
+    transform var(--duration-reveal) var(--ease-standard) var(--reveal-delay, 0ms);
+}
+
+html.js .reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.js .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

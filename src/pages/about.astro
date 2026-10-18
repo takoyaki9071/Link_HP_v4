@@ -1,0 +1,239 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import mvv from '../data/mvv.json';
+import aboutData from '../data/about.json';
+import { getCollection, render } from 'astro:content';
+
+// MVV・沿革・体制は answers/01（2026-10-18 承認反映）を出所とする。
+// mvv.approved が false に戻ると仮掲載注記が復活する。
+// MVV の解説文（story）は AI 起案の仮文案。mvv.storyApproved が true になるまで注記を表示。
+// TODO(§10 行8): メンバーの氏名・写真は公開同意（answers 未回答）があるまで placeholder 表示。
+// TODO(questions/04): 代表からのご挨拶は PDF（A4縦長）提供待ち。src/content/greeting/representative.md の
+//                     published が true になるまで「準備中」枠を表示する。
+const about = aboutData;
+
+// 代表からのご挨拶（content collection: src/content/greeting/）
+const greetingEntries = await getCollection('greeting');
+const greetingEntry = greetingEntries[0];
+const GreetingContent = greetingEntry ? (await render(greetingEntry)).Content : null;
+---
+
+<BaseLayout title="団体紹介 - Link 公式ホームページ" description="Linkの理念・沿革・運営体制・代表からのご挨拶の紹介ページです。">
+  <PageHero
+    eyebrow="About"
+    title="団体紹介"
+    lead="Linkの理念、沿革、運営体制、代表からのご挨拶を掲載するページです。掲載文は、関係者の承認後に順次公開します。"
+  />
+
+  <!-- 01 理念: Mission / Vision / Values を縦1列で上から順に。
+       各ブロックは「見出し（タイトル）＋定義文＋解説文」の3層。
+       解説文（story）は AI 起案の仮掲載（questions/04 で承認待ち） -->
+  <section class="section section-alt" id="philosophy" aria-labelledby="philosophy-title">
+    <div class="container">
+      <header class="section-head reveal">
+        <p class="section-eyebrow"><span class="section-index">01</span><span>Philosophy</span></p>
+        <h2 class="section-title" id="philosophy-title">理念</h2>
+        <span class="section-bar" aria-hidden="true"></span>
+      </header>
+      <div>
+        <ul class="mvv-stack" role="list">
+          <!-- Mission: 定義文は承認済み / 解説文は仮掲載 -->
+          <li class="card mvv-block reveal">
+            <p class="mvv-eyebrow">Mission</p>
+            <p class="mvv-statement">{mvv.mission.statement}</p>
+            <p class="mvv-story">{mvv.mission.story}</p>
+          </li>
+          <!-- Vision -->
+          <li class="card mvv-block reveal" style="--reveal-delay: 100ms;">
+            <p class="mvv-eyebrow">Vision</p>
+            <p class="mvv-statement">{mvv.vision.statement}</p>
+            <p class="mvv-story">{mvv.vision.story}</p>
+          </li>
+          <!-- Values: 節・面・白・登・遇。画像は後日の公式素材で差し替え（mvv.json の image/imageAlt）。
+               解説文（valuesStory）は仮掲載 -->
+          <li class="card mvv-block reveal" style="--reveal-delay: 200ms;">
+            <p class="mvv-eyebrow">Values</p>
+            <p class="mvv-statement">節・面・白・登・遇 — 5つの価値観</p>
+            <p class="mvv-story">{mvv.valuesStory}</p>
+            <ul class="value-grid" role="list">
+              {mvv.values.map((value) => (
+                <li class="card value-tile">
+                  <div class="value-media">
+                    {value.image ? (
+                      <img src={value.image} alt={value.imageAlt} width="320" height="320" loading="lazy" />
+                    ) : (
+                      <span class="value-char" aria-hidden="true">{value.kanji}</span>
+                    )}
+                  </div>
+                  {/* 画像を入れるまで漢字が読み替えの役割を持つため、tile 内の text と合わせて情報は重複しない */}
+                  {!value.image && <span class="visually-hidden">{value.kanji}</span>}
+                  <p class="value-text">{value.text}</p>
+                </li>
+              ))}
+            </ul>
+          </li>
+        </ul>
+
+        {(!mvv.approved || !mvv.storyApproved) && (
+          <p class="provisional-note">
+            {!mvv.approved && <>※ MVV の定義は V1 の開発要件定義書（ビジョンブック）からの仮掲載です。関係者の承認後に確定します。<br /></>}
+            {!mvv.storyApproved && <>※ 解説文は AI 起案の仮掲載です（生成AIプロンプト/questions/04 で承認後に確定）。</>}
+          </p>
+        )}
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 歴史・実績: 記載内容は一次情報の確認が前提のため、確定まで非掲載 -->
+  <section class="section" id="history" aria-labelledby="history-title">
+    <div class="container">
+      <header class="section-head reveal">
+        <p class="section-eyebrow"><span class="section-index">02</span><span>History</span></p>
+        <h2 class="section-title" id="history-title">沿革と実績</h2>
+        <span class="section-bar" aria-hidden="true"></span>
+      </header>
+      <div class="reveal" style="--reveal-delay: 120ms;">
+        <!-- 沿革タイムライン（2026-10-18 関係者指示「横に広がる線＋点＋斜めに日付でストーリー形式に」）。
+             日付と出来事は answers/01 の事実。story（出来事の一文）は AI 起案の仮掲載
+             （about.json history.storyApproved が true になるまで仮掲載注記を表示）。
+             TODO: 「思い → 失敗 → 今」の物語原稿の承認後に story を差し替え（questions/04 と同じ運用）。 -->
+        <ol class="hist-timeline" role="list" tabindex="0" aria-label="沿革のタイムライン（狭い画面では横にスクロールできます）">
+          {about.history.items.map((h, i) => (
+            <li class="hist-item" style={`--hist-i: ${i}`}>
+              <time class="hist-date" datetime={h.iso}>{h.date}</time>
+              <span class="hist-dot" aria-hidden="true"></span>
+              <p class="hist-title">
+                {h.title}
+                {h.pending && <span class="hist-pending">準備中</span>}
+              </p>
+              <p class="hist-story">{h.story}</p>
+            </li>
+          ))}
+        </ol>
+        {about.history.storyApproved ? null : (
+          <p class="provisional-note">※ 出来事の一文（story）は AI 起案の仮掲載です。関係者の承認後に確定します。</p>
+        )}
+        <!-- タイムラインに載せにくい事実（拠点・提携先・実績）は従来どおりの事実リストで補う -->
+        <dl class="fact-list hist-facts" role="list">
+          {about.facts.map((fact) => (
+            <div class="fact-row">
+              <dt class="fact-term">{fact.term}</dt>
+              <dd class="fact-text">{fact.text}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 メンバー: 公開同意（§10 行8）の回答までは写真・氏名とも placeholder 表示 -->
+  <section class="section section-alt" id="team" aria-labelledby="team-title">
+    <div class="container">
+      <header class="section-head reveal">
+        <p class="section-eyebrow"><span class="section-index">03</span><span>Team</span></p>
+        <h2 class="section-title" id="team-title">運営メンバー</h2>
+        <span class="section-bar" aria-hidden="true"></span>
+      </header>
+      <div class="reveal" style="--reveal-delay: 120ms;">
+        <p class="team-note">{about.team.note}</p>
+        <!-- TODO(§10 行8): 公開同意が取れたら about.json の members に
+             { name, role, photo, photoAlt, hashtags[] } を追加。photo が空の間は下記と同じ placeholder を表示する。
+             役職（positions）とハッシュタグ（tags）は仮の並び — members の値が優先される -->
+        <ul class="team-grid" role="list">
+          {Array.from({ length: about.team.members.length || about.team.memberCount }).map((_, i) => {
+            const member = about.team.members[i];
+            // 役職・ハッシュタグ: members の実データを優先し、無い間は仮の並び（positions/tags）を表示
+            const role = member?.role ?? about.team.positions?.list?.[i];
+            const tags =
+              member?.hashtags ??
+              (about.team.tags?.pool
+                ? Array.from({ length: about.team.tags.perMember ?? 2 }, (_, k) => about.team.tags.pool[(i * (about.team.tags.perMember ?? 2) + k) % about.team.tags.pool.length])
+                : []);
+            return (
+              <li class="card member-card" aria-label={`メンバー${i + 1}（公開準備中）`}>
+                <div class="member-photo">
+                  {member?.photo ? (
+                    <img src={member.photo} alt={member.photoAlt || `${member.name}の写真`} loading="lazy" />
+                  ) : (
+                    <span class="member-photo-label" aria-hidden="true">写真<br />準備中</span>
+                  )}
+                </div>
+                {member?.name ? (
+                  <p class="member-name">{member.name}</p>
+                ) : (
+                  <p class="member-name">メンバー{i + 1}<span class="member-name-note">氏名は公開同意後に掲載</span></p>
+                )}
+                {role && <p class="member-role">{role}</p>}
+                {tags && tags.length > 0 && (
+                  <ul class="member-tags" role="list">
+                    {tags.map((tag) => (
+                      <li class="member-tag">{tag}</li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+        <p class="provisional-note">{about.team.pending}</p>
+        {about.team.positions?.provisional && (
+          <p class="provisional-note">※ 役職とハッシュタグは仮の並びです（メンバーの公開同意後に差し替え）。</p>
+        )}
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 代表からのご挨拶: PDF（A4縦長）または本文で公開。
+       published: false の間は「準備中」の枠のみ（representative.md で管理） -->
+  <section class="section" id="greeting" aria-labelledby="greeting-title">
+    <div class="container">
+      <header class="section-head reveal">
+        <p class="section-eyebrow"><span class="section-index">04</span><span>Greeting</span></p>
+        <h2 class="section-title" id="greeting-title">代表からのご挨拶</h2>
+        <span class="section-bar" aria-hidden="true"></span>
+      </header>
+      <!-- PDF 公開時: A4 縦長の枠に PDF を表示。表示不可環境向けにリンクを併記 -->
+      <!-- 文章のみ公開時: representative.md の本文を表示 -->
+      <!-- 未公開（published: false）の間: A4 縦長の「準備中」枠（PDF 受け入れ用） -->
+      <div class="reveal" style="--reveal-delay: 120ms;">
+        <div class="greeting-body">
+          {greetingEntry && greetingEntry.data.published && greetingEntry.data.pdf ? (
+            <div class="greeting-pdf-frame">
+              <object data={greetingEntry.data.pdf} type="application/pdf" class="greeting-pdf" title="代表からのご挨拶（PDF）">
+                <p class="greeting-fallback">
+                  PDFが表示されない場合は
+                  <a href={greetingEntry.data.pdf}>こちらからご覧ください</a>。
+                </p>
+              </object>
+            </div>
+          ) : greetingEntry && greetingEntry.data.published ? (
+            <article class="card greeting-card">
+              <GreetingContent />
+            </article>
+          ) : (
+            <!-- 準備中: A4 縦長の枠（PDF 受け入れ用） -->
+            <figure class="greeting-frame">
+              <div class="greeting-page">
+                <span class="greeting-page-label" aria-hidden="true">準備中</span>
+                <span class="greeting-page-note" aria-hidden="true">A4 縦長の代表からのご挨拶を<br />この枠で公開予定です</span>
+                <span class="visually-hidden">代表からのご挨拶は準備中です</span>
+              </div>
+              <figcaption class="greeting-note">代表からのご挨拶は、制作後にここで公開します。</figcaption>
+            </figure>
+          )}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05 導線: 気になった人はホームのお問い合わせへ -->
+  <section class="section" id="page-cta" aria-label="お問い合わせへの導線">
+    <div class="container centered">
+      <p class="page-cta-note">Linkについて、もっと知りたいことがあれば</p>
+      <a class="btn btn-primary" href="/#contact">
+        お問い合わせを見る<span class="btn-arrow" aria-hidden="true">→</span>
+      </a>
+    </div>
+  </section>
+</BaseLayout>
