@@ -776,13 +776,34 @@ html[data-theme="dark"] .brand-logo[data-variant="dark"] {
 }
 
 /* ---------- フッター: ヘッダーより多くの情報を置く（サイトマップ・連絡先・今後のページ） ---------- */
+/* 従来 margin-block-start で白面が覗いていた（v3 から欠点・2026-10-19 関係者指示）。
+   margin 0 にして直前のセクションと面を直接つなぎ、区切りは上端の赤いほわーん線で担う */
 .site-footer {
   position: relative;
-  margin-block-start: clamp(48px, 8vw, 80px);
+  margin-block-start: 0;
   padding-block: clamp(40px, 6vw, 64px) var(--space-5);
   background: var(--color-surface-muted);
-  border-top: 1px solid var(--color-border);
+  /* 境目の線は border の代わりに .footer-topglow（赤い光の横一文字）が担う */
+  border-top: 0;
   overflow: clip;
+}
+
+/* 接続点のメリハリ: 上端に横一文字の赤い光（ナビの反照 --deco-glow と同系のぼんやり光）。
+   灰色に統一された面どうしの境目に、赤線＋下向きの落影でアクセントを入れる */
+.footer-topglow {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--deco-glow) 14%,
+    var(--color-brand) 50%,
+    var(--deco-glow) 86%,
+    transparent 100%
+  );
+  box-shadow: 0 3px 14px 1px var(--deco-glow);
+  pointer-events: none;
 }
 
 /* ブランドの締め: 上端に赤の細ライン（装飾） */
