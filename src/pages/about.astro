@@ -97,7 +97,8 @@ const GreetingContent = greetingEntry ? (await render(greetingEntry)).Content : 
         <span class="section-bar" aria-hidden="true"></span>
       </header>
       <div class="reveal" style="--reveal-delay: 120ms;">
-        <!-- 沿革タイムライン（2026-10-18 関係者指示「横に広がる線＋点＋斜めに日付でストーリー形式に」）。
+        <!-- 沿革タイムライン（2026-10-18 関係者指示「横に広がる線＋点＋ストーリー形式に」）。
+             同日追加指示「日付を水平に」で日付は水平配置（pages.css hist-date）。
              日付と出来事は answers/01 の事実。story（出来事の一文）は AI 起案の仮掲載
              （about.json history.storyApproved が true になるまで仮掲載注記を表示）。
              TODO: 「思い → 失敗 → 今」の物語原稿の承認後に story を差し替え（questions/04 と同じ運用）。 -->

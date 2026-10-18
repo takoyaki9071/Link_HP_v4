@@ -799,7 +799,7 @@
   line-height: 1.8;
 }
 
-/* ---------- 沿革タイムライン（2026-10-18 関係者指示「横に広がる線＋点＋斜めに日付でストーリー化」） ---------- */
+/* ---------- 沿革タイムライン（2026-10-18 関係者指示「横に広がる線＋点＋ストーリー化」、日付は水平 — 同日「日付を水平に」で変更） ---------- */
 /* 線の位置は日付の高さ+ドット中心。.hist-date の高さとセットで調整する */
 .hist-timeline {
   --hist-line: 45px;
@@ -842,14 +842,13 @@ html.js .reveal.is-visible .hist-timeline::before {
   scroll-snap-align: start;
 }
 
-/* 日付は斜めに置く（デザインのアクセント）。書体は本文と同じゴシック
-   （2026-10-18 関係者指示「沿革と実績の日付はゴシックで」— 明朝から変更） */
+/* 日付は水平に置く（2026-10-18 関係者指示「日付を水平に」— 斜め配置から変更）。
+   高さ（34px）は変えずタイムラインの線（--hist-line）とドット位置を維持する。
+   書体は本文と同じゴシック（同日指示「沿革と実績の日付はゴシックで」— 明朝から変更） */
 .hist-date {
   display: inline-block;
   height: 34px;
   margin-left: -2px;
-  transform: rotate(-4deg);
-  transform-origin: left bottom;
   color: var(--color-brand-strong);
   font-size: 1.0625rem;
   font-weight: 700;
