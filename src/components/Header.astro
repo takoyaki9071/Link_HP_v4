@@ -1,25 +1,26 @@
 ---
+const base = import.meta.env.BASE_URL; // "/Link_HP_v4"(末尾スラッシュなし)、"/" の場合は自動で相対になる
 ---
 <header class="site-header">
   <div class="container header-inner">
-    <a class="brand" href="/" aria-label="Link ホーム（トップへ）">
-      <!-- TODO(確認事項#5): ロゴの公式種別（Pre/Sec）確定後に差し替え。
-           黒/白2種を重ね、表示モードに応じて CSS で切替え（details は components.css）。
+    <a class="brand" href={base} aria-label="Link ホーム(トップへ)">
+      <!-- TODO(確認事項#5): ロゴの公式種別(Pre/Sec)確定後に差し替え。
+           黒/白2種を重ね、表示モードに応じて CSS で切替え(details は components.css)。
            html[data-theme] 由来のため描写前に確定し、切替のちらつきも出ない -->
-      <img class="brand-logo" data-variant="light" src="/logo-black.svg" alt="Link" width="88" height="30" />
-      <img class="brand-logo" data-variant="dark" src="/logo-white.svg" alt="" width="88" height="30" aria-hidden="true" />
+      <img class="brand-logo" data-variant="light" src={`${base}/logo-black.svg`} alt="Link" width="88" height="30" />
+      <img class="brand-logo" data-variant="dark" src={`${base}/logo-white.svg`} alt="" width="88" height="30" aria-hidden="true" />
     </a>
 
-    <!-- 下層ページからでも共通で動くよう、サイトルート基準のリンクにしている。
-         お問い合わせはCTAボタンのみ（導線の重複を避ける・2026-10-18 関係者指示） -->
+    <!-- BASE_URL 基準にしているため、GitHub Pages のプロジェクトサイト(base あり)でも正しく動く。
+         お問い合わせはCTAボタンのみ(導線の重複を避ける・2026-10-18 関係者指示) -->
     <nav id="site-nav" class="site-nav" aria-label="サイト内メニュー">
       <ul>
-        <li><a href="/#about">概要</a></li>
-        <li><a href="/about">団体紹介</a></li>
-        <li><a href="/activity">活動</a></li>
-        <li><a href="/news">お知らせ</a></li>
+        <li><a href={`${base}/#about`}>概要</a></li>
+        <li><a href={`${base}/about`}>団体紹介</a></li>
+        <li><a href={`${base}/activity`}>活動</a></li>
+        <li><a href={`${base}/news`}>お知らせ</a></li>
       </ul>
-      <a class="btn btn-primary nav-cta" href="/#contact">お問い合わせ</a>
+      <a class="btn btn-primary nav-cta" href={`${base}/#contact`}>お問い合わせ</a>
     </nav>
 
     <!-- 表示モード切替（ライト⇄ダーク）。選択は localStorage に保存し、未選択の間は OS 設定に追従。

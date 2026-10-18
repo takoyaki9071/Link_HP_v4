@@ -3,6 +3,9 @@ const year = new Date().getFullYear();
 import about from '../data/about.json';
 import siteData from '../data/site.json';
 
+// プロジェクトサイト(GitHub Pages)対応: base 付きパスが必要
+const base = import.meta.env.BASE_URL;
+
 // メールはビジョンブック2026 p23 の hello@linklabo.jp（2026-10-18 反映）
 const mail = siteData.contact?.email;
 const form = siteData.contact?.form;
@@ -36,11 +39,11 @@ const showMail = mail?.confirmed && mail?.address;
     <nav class="footer-nav" aria-label="サイトマップ">
       <p class="footer-coltitle">サイトマップ</p>
       <ul>
-        <li><a href="/">ホーム</a></li>
-        <li><a href="/about">団体紹介</a></li>
-        <li><a href="/activity">活動</a></li>
-        <li><a href="/news">お知らせ</a></li>
-        <li><a href="/#contact">お問い合わせ</a></li>
+        <li><a href={base}>ホーム</a></li>
+        <li><a href={`${base}/about`}>団体紹介</a></li>
+        <li><a href={`${base}/activity`}>活動</a></li>
+        <li><a href={`${base}/news`}>お知らせ</a></li>
+        <li><a href={`${base}/#contact`}>お問い合わせ</a></li>
       </ul>
     </nav>
 

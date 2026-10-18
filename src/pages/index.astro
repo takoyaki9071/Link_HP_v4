@@ -11,6 +11,9 @@ import HeroCanvas from '../components/HeroCanvas.astro';
 const c = siteData.confirmed;
 const contact = siteData.contact;
 const about = aboutData;
+
+// プロジェクトサイト(GitHub Pages)対応: base 付きパスが必要
+const base = import.meta.env.BASE_URL;
 ---
 
 <BaseLayout>
@@ -29,7 +32,7 @@ const about = aboutData;
         {about.hero.lead}
       </p>
       <div class="hero-actions reveal" style="--reveal-delay: 240ms;">
-        <a class="btn btn-primary" href="/activity">
+        <a class="btn btn-primary" href={`${base}/activity`}>
           活動を見る<span class="btn-arrow" aria-hidden="true">→</span>
         </a>
         <a class="btn btn-ghost" href="#news">
@@ -43,7 +46,7 @@ const about = aboutData;
         <ul>
           <li><a href="#news"><span class="toc-num">01</span><span class="toc-label">お知らせ</span></a></li>
           <li><a href="#about"><span class="toc-num">02</span><span class="toc-label">Linkについて</span></a></li>
-          <li><a href="/activity"><span class="toc-num">03</span><span class="toc-label">活動</span></a></li>
+          <li><a href={`${base}/activity`}><span class="toc-num">03</span><span class="toc-label">活動</span></a></li>
           <li><a href="#contact"><span class="toc-num">04</span><span class="toc-label">お問い合わせ</span></a></li>
         </ul>
       </nav>
@@ -112,7 +115,7 @@ const about = aboutData;
           ))}
         </ul>
         <div class="section-cta">
-          <a class="btn btn-ghost" href="/about">
+          <a class="btn btn-ghost" href={`${base}/about`}>
             団体紹介を見る<span class="btn-arrow" aria-hidden="true">→</span>
           </a>
         </div>

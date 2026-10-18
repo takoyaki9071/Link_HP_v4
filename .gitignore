@@ -1,0 +1,9 @@
+# 依存関係
+node_modules/
+
+# ビルド生成物
+dist/
+.astro/
+
+# macOS
+.DS_Store

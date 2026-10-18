@@ -24,6 +24,9 @@ const articles = await Promise.all(
     Body: hasBody(item) ? (await render(item)).Content : null,
   })),
 );
+
+// プロジェクトサイト(GitHub Pages)対応: base 付きパスが必要
+const base = import.meta.env.BASE_URL;
 ---
 
 <BaseLayout
@@ -84,7 +87,7 @@ const articles = await Promise.all(
       )}
 
       <p class="news-back">
-        <a class="btn btn-ghost" href="/">
+        <a class="btn btn-ghost" href={base}>
           ホームへ戻る<span class="btn-arrow" aria-hidden="true">→</span>
         </a>
       </p>

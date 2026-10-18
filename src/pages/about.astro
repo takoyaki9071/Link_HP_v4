@@ -13,6 +13,9 @@ import { getCollection, render } from 'astro:content';
 //                     published が true になるまで「準備中」枠を表示する。
 const about = aboutData;
 
+// プロジェクトサイト(GitHub Pages)対応: base 付きパスが必要
+const base = import.meta.env.BASE_URL;
+
 // 代表からのご挨拶（content collection: src/content/greeting/）
 const greetingEntries = await getCollection('greeting');
 const greetingEntry = greetingEntries[0];
@@ -231,7 +234,7 @@ const GreetingContent = greetingEntry ? (await render(greetingEntry)).Content : 
   <section class="section" id="page-cta" aria-label="お問い合わせへの導線">
     <div class="container centered">
       <p class="page-cta-note">Linkについて、もっと知りたいことがあれば</p>
-      <a class="btn btn-primary" href="/#contact">
+      <a class="btn btn-primary" href={`${base}/#contact`}>
         お問い合わせを見る<span class="btn-arrow" aria-hidden="true">→</span>
       </a>
     </div>
