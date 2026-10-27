@@ -61,7 +61,7 @@ const GreetingContent = greetingEntry ? (await render(greetingEntry)).Content : 
                 <li class="card value-tile">
                   <div class="value-media">
                     {value.image ? (
-                      <img src={value.image} alt={value.imageAlt} width="320" height="320" loading="lazy" />
+                      <img src={`${base}${value.image}`} alt={value.imageAlt} width="320" height="320" loading="lazy" />
                     ) : (
                       <span class="value-char" aria-hidden="true">{value.kanji}</span>
                     )}

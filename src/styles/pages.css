@@ -754,6 +754,17 @@
   object-fit: cover;
 }
 
+/* Value ロゴは黒単色の SVG。ダーク面では反転して「白ロゴ」として見せる */
+:root[data-theme="dark"] .value-media img {
+  filter: invert(1);
+}
+@media (prefers-color-scheme: dark) {
+  /* JS 無効フォールバック（手動指定があるときは data-theme 側に任せる） */
+  :root:not([data-theme="light"]):not([data-theme="dark"]) .value-media img {
+    filter: invert(1);
+  }
+}
+
 /* 大きな書字は装飾ではなく内容。
    赤は大サイズ（24px/700相当以上）のため AA 大文字（3:1）の基準を満たす */
 .value-char {
