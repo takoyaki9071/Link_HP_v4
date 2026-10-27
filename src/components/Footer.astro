@@ -15,13 +15,13 @@ const showMail = mail?.confirmed && mail?.address;
 <footer class="site-footer">
   <span class="footer-topglow" aria-hidden="true"></span>
   <div class="container footer-grid">
-    <!-- ブランド部: キャッチ+団体の要点（トップ以外に来た人向けの最短要約） -->
+
     <div class="footer-brandcol">
       <p class="footer-brand">Link<span class="footer-brand-dot" aria-hidden="true">.</span></p>
       <p class="footer-catch">{about.hero.catch}</p>
-      <!-- TODO(更新時): 団体説明の運用更新時は about.json hero を差し替え（ answers/01 反映済み） -->
+
       <p class="footer-desc">{about.hero.lead}</p>
-      <!-- メールはビジョンブック2026 p23 の hello@linklabo.jp（2026-10-18 反映） -->
+
       {
         showMail && (
           <p class="footer-contactline">
@@ -36,7 +36,7 @@ const showMail = mail?.confirmed && mail?.address;
       }
     </div>
 
-    <!-- サイトマップ: 公開済みページ（ヘッダーより多くの導線を持つ） -->
+
     <nav class="footer-nav" aria-label="サイトマップ">
       <p class="footer-coltitle">サイトマップ</p>
       <ul>
@@ -48,8 +48,8 @@ const showMail = mail?.confirmed && mail?.address;
       </ul>
     </nav>
 
-    <!-- これから作るページ（第2期予定）。存在することが見える形で「準備中」と明示する -->
-    <!-- TODO(第2期): 各ページを実装したら span を a リンクに差し替える -->
+
+
     <nav class="footer-nav" aria-label="今後追加するページ">
       <p class="footer-coltitle">今後のページ<span class="footer-soonnote">準備中</span></p>
       <ul>
@@ -63,7 +63,7 @@ const showMail = mail?.confirmed && mail?.address;
 
   <div class="container footer-bottom">
     <p class="footer-copy">&copy; {year} Link</p>
-    <!-- TODO(確認事項#6): ドメイン確定後に正式URLをここに補う -->
+
     <p class="footer-note">学生団体 Link — 大阪府寝屋川市（寝屋川市立市民活動センター内）</p>
   </div>
 </footer>

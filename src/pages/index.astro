@@ -17,12 +17,11 @@ const base = import.meta.env.BASE_URL;
 ---
 
 <BaseLayout>
-  <!-- 開幕演出（IntroCanvas）は 2026-10-18 関係者指示「ページを開いた時のアニメーションなしで」により
-       非掲載に。コンポーネントは残置 — 戻すときは <IntroCanvas /> をこの位置に戻すだけ -->
-  <!-- 01 ヒーロー: キャッチコピーは answers/01 の標語（2026-10-18 承認反映） -->
+
+
   <section class="hero" id="hero" aria-labelledby="hero-copy">
     <div class="container hero-inner">
-      <!-- TODO: 団体説明の運用更新時は about.json hero を差し替え（answers/01 より反映済み） -->
+
       <p class="hero-eyebrow reveal">Link 公式ホームページ</p>
       <h1 class="hero-copy reveal" id="hero-copy" style="--reveal-delay: 80ms;">
         すべての人の、<span class="hero-accent">{about.hero.accent}</span>をLinkする。
@@ -40,8 +39,7 @@ const base = import.meta.env.BASE_URL;
         </a>
       </div>
 
-      <!-- 表紙風の目次（実リンク）。下に続くセクションへの道標でもある。
-           活動は 2026-10-18 関係者指示で完全別ページ（/activity）に -->
+
       <nav class="hero-toc reveal" style="--reveal-delay: 320ms;" aria-label="このページの目次">
         <ul>
           <li><a href="#news"><span class="toc-num">01</span><span class="toc-label">お知らせ</span></a></li>
@@ -51,23 +49,16 @@ const base = import.meta.env.BASE_URL;
         </ul>
       </nav>
     </div>
-    <!-- 背景のゆるやかな演出（装飾のみ。prefers-reduced-motion で停止） -->
+
     <div class="hero-bg" aria-hidden="true">
       <span class="hero-blob hero-blob-a"></span>
       <span class="hero-blob hero-blob-b"></span>
       <span class="hero-pattern hero-pattern-dots"></span>
       <span class="hero-pattern hero-pattern-stripes"></span>
     </div>
-    <!-- 実験版キャンバス演出（点→線→多面体が転がる。外せば元に戻る） -->
+
     <HeroCanvas />
-    <!-- =========================================================================
-         デザインブック演出 v4.1（試作・関係者指示）
-         面付けトンボ + 背表紙の縦書きゴースト字（版元情報の一行は 2026-10-18 に撤去）。
-         背表紙の文字列は**毎回ランダムに生成**した数字/記号に差し替える（下の script）。
-         すべて装飾（aria-hidden・情報は運ばない）。
-         戻し方: この枠線内の要素（hero-press / hero-corners / hero-spine）
-         を削除し、pages.css の「デザインブック演出」ブロックを消す。
-         ========================================================================= -->
+
     <div class="hero-press" aria-hidden="true"></div>
     <div class="hero-corners" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
     <span class="hero-spine" aria-hidden="true" lang="ja">1 2 3 4 5 6 7 8 9</span>
@@ -85,12 +76,12 @@ const base = import.meta.env.BASE_URL;
         spine.textContent = out.trim();
       })();
     </script>
-    <!-- ============================ ここまで ============================ -->
-    <!-- 装飾のみ。情報は運ばない -->
+
+
     <div class="hero-scroll" aria-hidden="true">Scroll</div>
   </section>
 
-  <!-- 02 お知らせ: markdown 追加で反映。0件のときは空表示（docs/要件定義書.md §7.3） -->
+
   <section class="section section-alt" id="news" aria-labelledby="news-title">
     <div class="container">
       <SectionHeading title="お知らせ" id="news-title" eyebrow="News" index="01" />
@@ -100,7 +91,7 @@ const base = import.meta.env.BASE_URL;
     </div>
   </section>
 
-  <!-- 03 Linkについて: 標準文＋要点3カード（answers/01 より反映） -->
+
   <section class="section" id="about" aria-labelledby="about-title">
     <div class="container">
       <SectionHeading title="Linkについて" id="about-title" eyebrow="About" index="02" />
@@ -123,8 +114,7 @@ const base = import.meta.env.BASE_URL;
     </div>
   </section>
 
-  <!-- 03 お問い合わせ: メールはアドレスのベタ書き（mailto起動なし）＋フォームのページ内埋め込み。
-     活動は別ページ（/activity）に移設したためセクション番号は 03。 activities の代わりに灰面を担当 -->
+
   <section class="section section-alt" id="contact" aria-labelledby="contact-title">
     <div class="container">
       <SectionHeading title="お問い合わせ" id="contact-title" eyebrow="Contact" index="03" />
@@ -133,7 +123,7 @@ const base = import.meta.env.BASE_URL;
           活動への参加、お問い合わせは下のフォームからお願いします。
           メールでのご連絡も受け付けています。
         </p>
-        <!-- TODO(確認事項#4): メールは仮アドレス（test.com）。正式アドレスが確定したら site.json を差し替え -->
+
         <ul class="contact-list" role="list">
           {Object.values(contact).filter((channel) => channel.mode === 'address').map((channel) => (
             <li class="contact-item">
@@ -151,8 +141,7 @@ const base = import.meta.env.BASE_URL;
           ))}
         </ul>
 
-        <!-- ページ内で直接入力できるフォーム（Googleフォームの埋め込み）。
-             埋め込みが読み込めない環境向けに、開いたリンクも併記 -->
+
         {contact.form.embed && (
           <div class="contact-embed">
             <h3 class="contact-embed-title">フォームからのお問い合わせ<span class="contact-embed-note">（このページから直接入力できます）</span></h3>
@@ -163,7 +152,7 @@ const base = import.meta.env.BASE_URL;
               loading="lazy"
               width="640"
               height="760"
-              referrerpolicy="no-referrer-when-downgrade"
+              referrerpolicy="no-referrer"
             >
               <p>フォームを表示できませんでした。
                 <a href={contact.form.url} target="_blank" rel="noopener noreferrer">フォームを開く</a>

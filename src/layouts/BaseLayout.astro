@@ -42,12 +42,9 @@ const base = import.meta.env.BASE_URL;
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" type="image/svg+xml" href={`${base}/favicon.svg`} />
     <link rel="apple-touch-icon" href={`${base}/apple-touch-icon.png`} />
-    <!-- ブラウザUI（アドレスバー等）の色。ダーク指定時は下のスクリプトが差し替える -->
+
     <meta name="theme-color" content="#ffffff" />
-    <!-- 表示モードの初期化（描写前に行って切り替えのちらつきを防ぐ）:
-         1) localStorage の手動選択（ヘッダーのトグル）が最優先
-         2) 未選択なら OS の prefers-color-scheme に追従（OS 変化も追従）
-         JS 無効環境では以降のメディアクエリ（tokens.css）がそのまま効く -->
+
     <script is:inline>
       (function () {
         var root = document.documentElement;
@@ -89,24 +86,20 @@ const base = import.meta.env.BASE_URL;
         });
       })();
     </script>
-    <!-- JS 有効判定（.reveal の CSS は html.js 配下でのみ非表示になる。JS無効環境では常時表示） -->
+
     <script is:inline>document.documentElement.classList.add('js');</script>
   </head>
   <body>
     <a class="skip-link" href="#main">本文へスキップ</a>
     <Header />
-    <!-- ページ全体の世界 Canvas: 本文（main z-index:1）の下に多様な図形（立体/真球/長い線/点）を
-         敷く。外せば元に戻る（WorldCanvas.astro のヘッダーコメント参照） -->
+
     <WorldCanvas />
     <main id="main">
       <slot />
     </main>
     <Footer />
 
-    <!-- 控えめなスクロール演出（2026-10-18 承認）:
-         .reveal を表示1度きりフェードアップ。reduced-motion では即時全表示。
-         主要情報を長く隠さないため遅延は最大240ms・ホーム設計プラン §4 の改定を参照。
-         なお html.intro-wait がある間（開幕演出中）は開幕の発表まで待ってから始める。 -->
+
     <script>
       const revealEls = document.querySelectorAll<HTMLElement>('.reveal');
       const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;

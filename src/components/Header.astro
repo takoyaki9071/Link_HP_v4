@@ -4,15 +4,12 @@ const base = import.meta.env.BASE_URL; // "/Link_HP_v4"(末尾スラッシュな
 <header class="site-header">
   <div class="container header-inner">
     <a class="brand" href={base} aria-label="Link ホーム(トップへ)">
-      <!-- TODO(確認事項#5): ロゴの公式種別(Pre/Sec)確定後に差し替え。
-           黒/白2種を重ね、表示モードに応じて CSS で切替え(details は components.css)。
-           html[data-theme] 由来のため描写前に確定し、切替のちらつきも出ない -->
+
       <img class="brand-logo" data-variant="light" src={`${base}/logo-black.svg`} alt="Link" width="88" height="30" />
       <img class="brand-logo" data-variant="dark" src={`${base}/logo-white.svg`} alt="" width="88" height="30" aria-hidden="true" />
     </a>
 
-    <!-- BASE_URL 基準にしているため、GitHub Pages のプロジェクトサイト(base あり)でも正しく動く。
-         お問い合わせはCTAボタンのみ(導線の重複を避ける・2026-10-18 関係者指示) -->
+
     <nav id="site-nav" class="site-nav" aria-label="サイト内メニュー">
       <ul>
         <li><a href={`${base}/#about`}>概要</a></li>
@@ -23,8 +20,7 @@ const base = import.meta.env.BASE_URL; // "/Link_HP_v4"(末尾スラッシュな
       <a class="btn btn-primary nav-cta" href={`${base}/#contact`}>お問い合わせ</a>
     </nav>
 
-    <!-- 表示モード切替（ライト⇄ダーク）。選択は localStorage に保存し、未選択の間は OS 設定に追従。
-         アイコン: 月=ダークへ切り替え / 太陽=ライトへ切り替え の意 -->
+
     <button id="theme-btn" class="theme-btn" type="button" aria-label="ダークモードに切り替え">
       <svg class="theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" />
